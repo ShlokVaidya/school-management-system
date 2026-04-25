@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+</head>
+<body>
+    <main class="login-shell">
+        <section class="login-box">
+            <div class="login-badge" aria-hidden="true">
+                <img src="{{ url_for('public_file', filename='school-bag.png') }}" class="login-logo" alt="School Management System logo">
+            </div>
+            <h1 class="login-title">Student Management System</h1>
+            <p class="login-subtitle">Sign in to continue to your dashboard.</p>
+
+            {% if error %}
+            <div class="alert login-alert" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn login-btn w-100 mt-2">Login</button>
+            </form>
+
+            <p class="login-footer">Use your school account credentials to access the portal.</p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
