@@ -3,87 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - {% block title %}Dashboard{% endblock %}</title>
+    <title>Student Tracker - {% block title %}Home{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <! -- Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <! -- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <! -- Choices.js -->
+    <link href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold fs-5" href="{{ url_for('dashboard') }}">
-                <i class="bi bi-mortarboard-fill"></i> Student Tracker
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" title="Toggle navigation" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
 
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold fs-5" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-mortarboard-fill text-warning"></i> Student Tracker
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" title="Toggle Navigation" aria-label="Toggle Navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                    <!-- ADMIN / VICE PRINCIPAL / COORDINATOR NAVIGATION -->
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-                    {% if session.role in ['admin', 'vice_principal', 'coordinator'] %}
+                {% if session.role in ['admin', 'vice_principle', 'coordinator'] %}
+
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard </a>
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
                     </li>
-                    <!-- Teachers Dropdown -->
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-list-ul"></i> Teachers </a>
+                            <i class="bi bi-person-badge"></i> Teachers
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('admin_teachers') }}"><i class="bi bi-list-ul"></i> View All Teachers</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_teacher') }}"><i class="bi bi-person-plus"></i> Add New Teacher</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_teachers') }}">
+                                <i class="bi bi-list-ui"></i> View All Teachers</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_teacher') }}">
+                                <i class="bi bi-person-plus"></i> Add Teacher</a></li>
                         </ul>
                     </li>
-                    <!-- Sections Dropdown -->
+                    
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <i class="bi bi-grid-1x2"></i> Sections
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('admin_sections') }}"><i class="bi bi-list-ul"></i> View All Sections</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_sections') }}">
+                                <i class="bi bi-list-ul"></i> View All Sections</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('add_section') }}">
-                                <i class="bi bi-plus-square"></i> Add New Section</a></li>
+                                <i class="bi bi-plus-square"></i> Add Section</a></li>
                         </ul>
                     </li>
-                    <!-- Students Dropdown -->
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <i class="bi bi-people"></i> Students
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('admin_all_students') }}"><i class="bi bi-list-ul"></i> View All Students</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_all_students') }}">
+                                <i class="bi bi-list-ul"></i> View All Students</a></li>
                         </ul>
                     </li>
-                    <!-- Marks Dropdown -->
-                     <li class="nav-item">
+
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_all_marks') }}">
                             <i class="bi bi-bar-chart"></i> All Marks
                         </a>
-                     </li>
-                     <li class="nav-item">
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_notices') }}">
                             <i class="bi bi-megaphone"></i> Notices
                         </a>
-                     </li>
+                    </li>
+
+                    {% elif session.role == 'teacher' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('teacher_dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-people"></i> Students
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('teacher_students') }}">
+                                <i class="bi bi-list-ul"></i> View Students</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_student') }}">
+                                <i class="bi bi-person-plus"></i> Add Student</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-journal-text"></i> Assignments
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('teacher_assignments') }}">
+                                <i class="bi bi-list-ul"></i> View Assignments</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_assignment') }}">
+                                <i class="bi bi-plus-square"></i> Add Assignment</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-pencil-square"></i> Marks
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('teacher_marks') }}">
+                                <i class="bi bi-table"></i> View Marks</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('enter_marks') }}">
+                                <i class="bi bi-plus-square"></i> Enter Marks</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar-check"></i> Attendance
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('teacher_attendance') }}">
+                                <i class="bi bi-check2-square"></i> Take Attendance</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('view_attendance') }}">
+                                <i class="bi bi-eye"></i> View Records</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('section_charts') }}">
+                            <i class="bi bi-graph-up"></i> Charts
+                        </a>
+                    </li>
+
+                    {% elif session.role == 'student' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student_dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student_attendance') }}">
+                            <i class="bi bi-calendar-check"></i> Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student_notices') }}">
+                            <i class="bi bi-bell"></i> Notices
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('change_password') }}">
+                            <i class="bi bi-key"></i> Change Password
+                        </a>
+                    </li>
                     {% endif %}
-                </ul>
-            </div>
+            </ul>
+
+            <ul class="navbar-nav ms-auto">
+                {% if session.full_name %}
+                <li class="nav-item">
+                    <span class="navbar-text text-warning me-3">
+                        <i class="bi bi-person-circle"></i>
+                        {{ session.full_name }}
+                        <span class="badge bg-secondary ms-1">{{ session.role.replace('_',' ') | title }}</span>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
-    
-    <div class="container-fluid px-4 mt-4">
-        {% block content %}{% endblock %}
-    </div>
+    </div> 
+</nav>
 
-    <footer class="text-center text-muted py-3 mt-5 border-top small">
-        Student Tracker &mdash; Developed by Shlok Vaidya &copy; 2026. All rights reserved.
-    </footer>
+<div class="container-fluid px-4 mt-4">
+    {% block content %}{% endblock %}
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    {% block scripts %}{% endblock %}
+<footer class="text-center text-muted py-3 mt-5 border-top small">
+    Student Tracker &mdash; Developed by Shlok Vaidya &copy; 2026
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>
