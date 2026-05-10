@@ -1,27 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Add Teacher{% endblock %}
+{% block title %}Edit Teacher{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
         <div class="card">
-            <div class="card-header bg-primary">
-                <i class="bi bi-person-plus"></i> Add New Teacher
+            <div class="card-header bg-warning">
+                <i class="bi bi-pencil"></i> Edit Teacher
             </div>
             <div class="card-body">
-
                 {% if msg %}
                     {% if 'SUCCESS' in msg %}
-                    <div class="alert alert-success"><i class="bi bi-check-circle"></i> {{ msg.replace('SUCCESS: ', '') }}</div>
+                    <div class="alert alert-success">{{ msg.replace('SUCCESS: ', '') }}</div>
                     {% else %}
-                    <div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> {{ msg }}</div>
+                    <div class="alert alert-danger">{{ msg }}</div>
                     {% endif %}
                 {% endif %}
 
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" name="full_name" placeholder="e.g. Mr. Ramesh Kumar" required>
+                        <input type="text" class="form-control" name="full_name" value="{{ teacher.full_name }}" required>
                     </div>
 
                     <div class="mb-3">
@@ -29,7 +28,10 @@
                         <select name="subject_names" id="subjectPicker" multiple
                                 placeholder="Select one or more subjects..." required>
                             {% for sub in subjects %}
-                            <option value="{{ sub.subject_name }}">{{ sub.subject_name }}</option>
+                            <option value="{{ sub.subject_name }}"
+                                {% if sub.subject_name in assigned_subjects %}selected{% endif %}>
+                                {{ sub.subject_name }}
+                            </option>
                             {% endfor %}
                         </select>
                         <div class="form-text">Type to search. Click the × on a chip to remove it.</div>
@@ -40,7 +42,10 @@
                         <select name="section_ids" id="sectionPicker" multiple
                                 placeholder="Select one or more sections..." required>
                             {% for sec in sections %}
-                            <option value="{{ sec.id }}">{{ sec.section_name }}</option>
+                            <option value="{{ sec.id }}"
+                                {% if sec.id in assigned_section_ids %}selected{% endif %}>
+                                {{ sec.section_name }}
+                            </option>
                             {% endfor %}
                         </select>
                         <div class="form-text">A teacher can be assigned to multiple classes.</div>
@@ -49,21 +54,21 @@
                     <hr>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Login Username</label>
-                            <input type="text" class="form-control" name="username" placeholder="e.g. teacher_ramesh" required>
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" value="{{ teacher.username }}" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" placeholder="Set a password" required>
+                            <input type="password" class="form-control" name="password" value="{{ teacher.password }}" required>
                         </div>
                     </div>
 
                     <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-person-plus"></i> Add Teacher
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-lg"></i> Save Changes
                         </button>
                         <a href="{{ url_for('admin_teachers') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Back
+                            <i class="bi bi-arrow-left"></i> Cancel
                         </a>
                     </div>
                 </form>
@@ -75,7 +80,6 @@
 
 {% block scripts %}
 <script>
-// Turn the subject and section <select multiple> into searchable chip pickers
 new Choices('#subjectPicker', {
     removeItemButton: true,
     shouldSort: false,

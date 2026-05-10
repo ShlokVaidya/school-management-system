@@ -5,111 +5,151 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h3 class="mb-0"><i class="bi bi-speedometer2 text-primary"></i> Admin Dashboard</h3>
-        <p class="text-muted small mb-0">Welcome back, {{ session['full_name'] }}!</p>
+        <h3 class="mb-1"><i class="bi bi-speedometer2 text-primary"></i> Admin Dashboard</h3>
+        <p class="text-muted small mb-0">Welcome back, {{ session.full_name }}.</p>
     </div>
 </div>
+
+<!-- =============== Summary stat cards =============== -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100 card-border-primary">
+        <div class="card h-100 card-border-primary">
             <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-primary">{{ teacher_count }}</div>
-                <div class="small text-muted"><i class="bi bi-grid-1x2"></i> Sections</div>
+                <div class="small text-muted mb-1"><i class="bi bi-person-badge"></i> Teachers</div>
+                <div class="fs-2 fw-bold">{{ teacher_count }}</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100 card-border-info">
+        <div class="card h-100 card-border-success">
             <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-info">{{ student_count }}</div>
-                <div class="small text-muted"><i class="bi bi-people"></i> Students</div>
+                <div class="small text-muted mb-1"><i class="bi bi-grid-1x2"></i> Sections</div>
+                <div class="fs-2 fw-bold">{{ section_count }}</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100 card-border-warning">
+        <div class="card h-100 card-border-info">
             <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-warning">{{ assignment_count }}</div>
-                <div class="small text-muted"><i class="bi bi-journal-text"></i> Assignments</div>
+                <div class="small text-muted mb-1"><i class="bi bi-people"></i> Students</div>
+                <div class="fs-2 fw-bold">{{ student_count }}</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100 card-border-danger">
+        <div class="card h-100 card-border-warning">
             <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-danger">{{ marks_count }}</div>
-                <div class="small text-muted"><i class="bi bi-pencil-square"></i> Marks Entries</div>
+                <div class="small text-muted mb-1"><i class="bi bi-journal-text"></i> Assignments</div>
+                <div class="fs-2 fw-bold">{{ assignment_count }}</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100 bg-dark text-white">
+        <div class="card h-100 card-border-danger">
             <div class="card-body py-3">
-                <div class="fs-2"><i class="bi bi-megaphone-fill text-warning"></i></div>
-                <a href="{{ url_for('admin_notices') }}" class="btn btn-warning btn-sm mt-1">Notices</a>
+                <div class="small text-muted mb-1"><i class="bi bi-pencil-square"></i> Marks Entries</div>
+                <div class="fs-2 fw-bold">{{ marks_count }}</div>
             </div>
         </div>
     </div>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white fw-bold">
-                <i class="bi bi-bar-chart-fill"></i> Students Per Section
-            </div>
-            <div class="card-body">
-                <canvas id="sectionChart" height="220"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white fw-bold">
-                <i class="bi bi-graph-up-arrow"></i> Subject-Wise Average %
-            </div>
-            <div class="card-body">
-                <canvas id="subjectChart" height="220"></canvas>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: none;">
+            <div class="card-body py-3 text-center">
+                <div class="text-warning fs-3 mb-1"><i class="bi bi-megaphone-fill"></i></div>
+                <a href="{{ url_for('admin_notices') }}" class="btn btn-warning btn-sm">Manage Notices</a>
             </div>
         </div>
     </div>
 </div>
 
+<!-- =============== Charts Row =============== -->
+<div class="row g-3 mb-4">
+    <!-- Students Per Section — Donut -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-pie-chart-fill text-primary"></i> Students Per Section</span>
+                <span class="badge bg-secondary" id="sectionTotal">&mdash;</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap chart-wrap-sm">
+                    <canvas id="sectionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boys vs Girls — Donut -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-gender-ambiguous text-info"></i> Boys vs Girls</span>
+                <span class="badge bg-secondary" id="genderTotal">&mdash;</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap chart-wrap-sm">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject-wise Avg % — Horizontal Bar -->
+    <div class="col-md-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-up-arrow text-success"></i> Subject-wise Average %
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap chart-wrap-sm">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =============== Quick Actions + Recent Notices =============== -->
 <div class="row g-3">
     <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-lightning-fill"></i> Quick Actions
-            </div>
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-lightning-fill text-warning"></i> Quick Actions</div>
             <div class="list-group list-group-flush">
                 <a href="{{ url_for('add_teacher') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-people text-info"></i> View All Students
+                    <i class="bi bi-person-plus text-primary me-2"></i> Add New Teacher
+                </a>
+                <a href="{{ url_for('add_section') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-plus-square text-success me-2"></i> Add New Section
+                </a>
+                <a href="{{ url_for('admin_all_students') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-people text-info me-2"></i> View All Students
                 </a>
                 <a href="{{ url_for('admin_all_marks') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-bar-chart text-warning"></i> View All Marks
-                </a>
+                    <i class="bi bi-bar-chart text-warning me-2"></i> View All Marks
+               </a>
                 <a href="{{ url_for('admin_notices') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-megaphone text-danger"></i> Post Announcement
+                    <i class="bi bi-megaphone text-danger me-2"></i> Post Announcement
                 </a>
             </div>
         </div>
     </div>
 
     <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between">
-                <span><i class="bi bi-bell-fill"></i> Recent Announcements</span>
-                <a href="{{ url_for('admin_notices') }}" class="btn btn-sm btn-dark">Manage</a>
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bell-fill text-warning"></i> Recent Announcements</span>
+                <a href="{{ url_for('admin_notices') }}" class="btn btn-sm btn-outline-secondary">Manage</a>
             </div>
             <div class="card-body p-0">
                 {% if notices %}
                 <table class="table table-hover mb-0">
-                    <thread class="table-light">
+                    <thead>
                         <tr><th>Title</th><th>For</th><th>Posted</th></tr>
-                    </thread>
+                    </thead>
                     <tbody>
                         {% for n in notices %}
                         <tr>
-                            <td>{{ n.title }}</td>
+                            <td class="fw-medium">{{ n.title }}</td>
                             <td><span class="badge bg-secondary">{{ n.target_role }}</span></td>
                             <td class="small text-muted">{{ n.created_at.strftime('%d %b %Y') }}</td>
                         </tr>
@@ -128,45 +168,134 @@
 
 {% block scripts %}
 <script>
-    fetch('/admin/chart_data')
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        // Section Chart
-        var ctx1 = document.getElementById('sectionChart').getContext('2d');
-        new Chart(ctx1, {
-        type: 'bar',
+const PALETTE = [
+    '#2563eb', '#059669', '#d97706', '#dc2626',
+    '#7c3aed', '#0891b2', '#db2777', '#475569',
+    '#ea580c', '#0284c7'
+];
+const GENDER_COLORS = ['#2563eb', '#db2777', '#94a3b8']; // Boys / Girls / Not specified
+
+// Global Chart.js defaults for a cleaner look
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size   = 12;
+Chart.defaults.color       = '#64748b';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.boxHeight = 12;
+Chart.defaults.plugins.legend.labels.padding = 14;
+
+fetch('/admin/chart_data')
+.then(function(res) { return res.json(); })
+.then(function(data) {
+
+    // ---------- Donut: Students Per Section ----------
+    const secTotal = data.sec_data.reduce(function(a, b){ return a + b; }, 0);
+    document.getElementById('sectionTotal').innerText = secTotal + ' total';
+
+    new Chart(document.getElementById('sectionChart'), {
+        type: 'doughnut',
         data: {
             labels: data.sec_labels,
             datasets: [{
-                label: 'Number of Students',
                 data: data.sec_data,
-                backgroundColor: ['rgba(13,110,253,0.7)', 'rgba(25,135,84,0.7)', 'rgba(13,202,240,0.7)', 'rgba(255,193,7,0.7)', 'rgba(220,53,69,0.7)'],
-                borderWidth: 1
+                backgroundColor: PALETTE,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 6
             }]
         },
         options: {
             responsive: true,
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const v = ctx.parsed;
+                            const pct = secTotal ? ((v / secTotal) * 100).toFixed(1) : 0;
+                            return ctx.label + ': ' + v + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
         }
     });
 
-    // Subject-wise average - horizontal bar chart
-        var ctx2 = document.getElementById('subjectChart').getContext('2d');
-        new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: data.sub_labels,
-                datasets: [{
-                    label: 'Average %',
-                    data: data.sub_data,
-                    backgroundColor: 'rgba(25,135,84,0.7)',
-                    borderWidth: 1
-                }]
+    // ---------- Donut: Boys vs Girls ----------
+    const gTotal = data.gender_data.reduce(function(a, b){ return a + b; }, 0);
+    document.getElementById('genderTotal').innerText = gTotal + ' students';
+
+    new Chart(document.getElementById('genderChart'), {
+        type: 'doughnut',
+        data: {
+            labels: data.gender_labels,
+            datasets: [{
+                data: data.gender_data,
+                backgroundColor: GENDER_COLORS,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const v = ctx.parsed;
+                            const pct = gTotal ? ((v / gTotal) * 100).toFixed(1) : 0;
+                            return ctx.label + ': ' + v + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // ---------- Horizontal Bar: Subject-wise Avg % ----------
+    new Chart(document.getElementById('subjectChart'), {
+        type: 'bar',
+        data: {
+            labels: data.sub_labels,
+            datasets: [{
+                label: 'Average %',
+                data: data.sub_data,
+                backgroundColor: data.sub_data.map(function(v){
+                    if (v >= 75) return '#059669';  // success
+                    if (v >= 50) return '#d97706';  // warning
+                    return '#dc2626';               // danger
+                }),
+                borderRadius: 6,
+                borderSkipped: false,
+                barPercentage: 0.75
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) { return ctx.parsed.x + '%'; }
+                    }
+                }
             },
-            options: {
-                indexAxis: 'y',   // makes it horizontal
-                responsive: true,
-                scales: { x: { beginAtZero: true, max: 100 } }
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: '#e2e8f0', drawBorder: false },
+                    ticks: { callback: function(v){ return v + '%'; } }
+                },
+                y: { grid: { display: false } }
+            }
         }
     });
 });
