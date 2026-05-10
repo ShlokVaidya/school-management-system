@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{%block title %}Add Section{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-square"></i> Add New Section</h5>
+            </div>
+            <div class="card-body">
+                {% if msg %}
+                    {% if 'SUCCESS' in msg %}
+                    <div class="alert alert-success">{{ msg.replace('SUCCESS: ', '') }}</div>
+                    {% else %}
+                    <div class="alert alert-danger">{{ msg }}</div>
+                    {% endif %}
+                {% endif %}
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Section Name</label>
+                        <input type="text" class="form-control" name="section_name"
+                            placeholder="e.g. 12-A, 12-Science-B" required>
+                        <div class="form-text">You can add as many sections as needed.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-square"></i> Add Section
+                        </button>
+                        <a href="{{ url_for('admin_sections') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Sections
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
