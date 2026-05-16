@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Edit Student (Admin){% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit Student Profile &mdash; {{ student.name }}
+                </h5>
+                <a href="{{ url_for('admin_view_student', sid=student.id) }}" class="btn btn-sm btn-dark">
+                    <i class="bi bi-eye"></i> View Profile
+                </a>
+            </div>
+            <div class="card-body">
+                {% if msg %}
+                    {% if 'SUCCESS' in msg %}
+                    <div class="alert alert-success">{{ msg.replace('SUCCESS: ', '') }}</div>
+                    {% else %}
+                    <div class="alert alert-danger">{{ msg }}</div>
+                    {% endif %}
+                {% endif %}
+
+                <form method="POST">
+                    <!-- Basic details section -->
+                    <h6 class="fw-bold text-primary mt-2"><i class="bi bi-person"></i> Basic Details</h6>
+                    <hr class="mt-1 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Full Name</label>
+                            <input type="text" class="form-control" name="name"
+                                   value="{{ student.name }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Roll Number</label>
+                            <input type="text" class="form-control" name="roll_no"
+                                   value="{{ student.roll_no }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Section</label>
+                            <select class="form-select" name="section_id" title="Select Section" required>
+                                {% for sec in sections %}
+                                <option value="{{ sec.id }}" {% if student.section_id == sec.id %}selected{% endif %}>
+                                    {{ sec.section_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Personal metadata section -->
+                    <h6 class="fw-bold text-primary mt-4"><i class="bi bi-card-text"></i> Personal Info</h6>
+                    <hr class="mt-1 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" class="form-control" name="email"
+                                   value="{{ student.email or '' }}" placeholder="e.g. student@example.com">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Phone</label>
+                            <input type="text" class="form-control" name="phone"
+                                   value="{{ student.phone or '' }}" placeholder="10 digits">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Date of Birth</label>
+                            <input type="date" class="form-control" name="dob"
+                                   value="{{ student.dob or '' }}" title="Date of Birth" placeholder="YYYY-MM-DD">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Gender</label>
+                            <select class="form-select" name="gender" title="Select Gender">
+                                <option value="">-- Select --</option>
+                                <option value="Male"   {% if student.gender == 'Male'   %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other"  {% if student.gender == 'Other'  %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label fw-semibold">Address</label>
+                            <input type="text" class="form-control" name="address"
+                                   value="{{ student.address or '' }}" placeholder="Full home address">
+                        </div>
+                    </div>
+
+                    <!-- Parent / Guardian section -->
+                    <h6 class="fw-bold text-primary mt-4"><i class="bi bi-people"></i> Parent / Guardian</h6>
+                    <hr class="mt-1 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Parent / Guardian Name</label>
+                            <input type="text" class="form-control" name="parent_name"
+                                   value="{{ student.parent_name or '' }}" placeholder="e.g. Mr. Ramesh Kumar">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Parent Phone</label>
+                            <input type="text" class="form-control" name="parent_phone"
+                                   value="{{ student.parent_phone or '' }}" placeholder="10 digits">
+                        </div>
+                    </div>
+
+                    <!-- Login credentials section -->
+                    <h6 class="fw-bold text-primary mt-4"><i class="bi bi-key"></i> Login Credentials</h6>
+                    <hr class="mt-1 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Username</label>
+                            <input type="text" class="form-control" name="username"
+                                   value="{{ student.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password</label>
+                            <input type="text" class="form-control" name="password"
+                                   value="{{ student.user_password }}" required>
+                            <small class="text-muted">You can read and change the password here as admin.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-lg"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('admin_all_students') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Students
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

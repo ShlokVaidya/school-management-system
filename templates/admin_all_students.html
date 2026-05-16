@@ -1,9 +1,103 @@
 {% extends "base.html" %}
-{% block title %}All Marks{% endblock %}
+{% block title%}All Students{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h3 class="mb-3"><i class="bi bi-bar-chart"></i> All Students</h3>
-    <div class="alert alert-info mb-0">This page is under construction.</div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-people"></i> All Students</h3>
+    <a href="{{ url_for('admin_dedupe_students') }}"
+        class="btn btn-outline-danger"
+        onclick="return confirm('This will scan the database and merge any duplicate student records (same roll number in the same section). Marks and attendance of the duplicates will be moved to the original student. Continue?')">
+        <i class="bi bi-diagram-2"></i> Remove Duplicate Students
+    </a>
 </div>
+
+{% if request.args.get('dedupe_removed') %}
+    {% if request.args.get('dedupe_removed')|int > 0 %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill"></i>
+        Remove <strong>{{ request.args.get('dedupe_removed') }}</strong> duplicate student record(s).
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        No duplicate student records were found. The database is clean !
+    </div>
+    {% endif %}
+{% endif %}
+
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search"
+                value="{{ search }}" placeholder="Search by name or roll number...">
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i> Search
+            </button>
+            {% if search %}
+            <a href="{{ url_for('admin_all_students') }}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if students %}
+        <div class="table-resonsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-hover align-middle mb-0">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Roll Number</th>
+                        <th>Section</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><i class="bi bi-person-circle text-info me-1"></i> {{ s.name }}</td>
+                        <td><code>{{ s.roll_no }}</code></td>
+                        <td><span class="badge bg-primary">{{ s.section_name }}</span></td>
+                        <td class="small">{{ s.phone or '-' }}</td>
+                        <td class="small">{{ s.email or '-' }}</td>
+                        <td><code>{{ s.username }}</code></td>
+                        <td class="text-center">
+                            <a href="{{ url_for('admin_view_student', sid=s.id) }}"
+                                class="btn btn-sm btn-outline-info" title="View profile">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('admin_edit_student', sid=s.id) }}"
+                                class="btn btn-sm btn-outline-warning" title="Edit profile">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{{ url_for('admin_edit_student', sid=s.id) }}"
+                                class="btn btn-sm btn-outline-danger"
+                                onClick="return confirm('Delete student {{ s.name }}? All their marks, attendance and assignments will also be deleted.')"
+                                title="Delete student">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-2 text-muted small border-top">
+            Showing {{ students | length }} student(s)
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <i class="bi bi-people fs-1"></i>
+            <p class="mt-2">No Students found{% if search %} for "{{ search }}"{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

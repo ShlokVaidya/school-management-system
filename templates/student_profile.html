@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Student Profile{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center profile-avatar">
+                    {{ student.name[0] | upper }}
+                </div>
+            </div>
+            <div class="col">
+                <h4 class="mb-1">{{ student.name }}</h4>
+                <p class="mb-0 text-muted">
+                    Roll No: <strong>{{ student.roll_no }}</strong> &nbsp;|&nbsp;
+                    Section: <span class="badge bg-primary">{{ student.section_name }}</span>
+                </p>
+            </div>
+            <div class="col-auto">
+                {% if from_admin %}
+                <a href="{{ url_for('admin_edit_student', sid=student.id) }}" class="btn btn-outline-warning me-2">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{{ url_for('admin_all_students') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                {% else %}
+                <a href="{{ url_for('edit_student') }}" class="btn btn-outline-warning me-2">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{{ url_for('teacher_students') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if student.email or student.phone or student.dob or student.gender or student.parent_name or student.parent_phone or student.address %}
+        <hr>
+        <div class="row small">
+            {% if student.email %}
+            <div class="col-md-4 mb-1"><i class="bi bi-envelope text-primary"></i><strong>Email:</strong> {{ student.email }}</div>
+            {% endif %}
+            {% if student.phone %}
+            <div class="col-md-4 mb-1"><i class="bi bi-telephone text-success"></i><strong>Phone:</strong> {{ student.phone }}</div>
+            {% endif %}
+            {% if student.dob %}
+            <div class="col-md-4 mb-1"><i class="bi bi-calendar text-info"></i><strong>Date of Birth:</strong> {{ student.dob }}</div>
+            {% endif %}
+            {% if student.gender %}
+            <div class="col-md-4 mb-1"><i class="bi bi-person text-secondary"></i><strong>Gender:</strong> {{ student.gender }}</div>
+            {% endif %}
+            {% if student.parent_name %}
+            <div class="col-md-4 mb-1"><i class="bi bi-people text-warning"></i><strong>Parent Name:</strong> {{ student.parent_name }}</div>
+            {% endif %}
+            {% if student.parent_phone %}
+            <div class="col-md-4 mb-1"><i class="bi bi-telephone-plus text-warning"></i><strong>Parent Phone:</strong> {{ student.parent_phone }}</div>
+            {% endif %}
+            {% if student.address %}
+            <div class="col-md-4 mb-1"><i class="bi bi-geo-alt text-danger"></i><strong>Address:</strong> {{ student.address }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm card-border-primary">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-primary">{{ marks | length }}</div>
+                <div class="small text-muted">Marks Entries</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm card-border-success">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-success">{{ present_days }}</div>
+                <div class="small text-muted">Present Days</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm card-border-danger">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-danger">{{ total_days - present_days }}</div>
+                <div class="small text-muted">Days Absent/Late</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm card-hover-warning">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold {% if att_pct >= 75%}text-success{% else %}text-danger{% endif %}">
+                    {{ att_pct }}%
+                </div>
+                <div class="small text-muted">Attendance %</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="profileTabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#marksTab">
+            <i class="bi bi-bar-chart"></i> Marks
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#attendanceTab">
+            <i class="bi bi-calendar-check"></i> Attendance
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#assignTab">
+            <i class="bi bi-journal-text"></i> Assignments
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <div class="tab-pane fade show active" id="marksTab">
+        {% if marks %}
+        <div class="table-responsive">
+            <table class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr><th>Subject</th><th>Exam</th><th>Marks</th><th>Out of</th><th>%</th><th>Date</th></tr>                       
+                    </thead>
+                     <tbody>
+                        {% for m in marks %}
+                        <tr>
+                            <td>{{ m.subject }}</td>
+                            <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
+                            <td><strong>{{ m.marks_obtained }}</strong></td>
+                            <td>{{ m.total_marks }}</td>
+                            <td>
+                                {% set pct = (m.marks_obtained / m.total_marks * 100) | round(1) %}
+                                {% if pct >= 75 %}<span class="text-success fw-bold">{{ pct }}%</span>
+                                {% elif pct >= 50 %}<span class="text-warning fw-bold">{{ pct }}%</span>
+                                {% else %}<span class="text-danger fw-bold">{{ pct }}%</span>{% endif %}
+                            </td>
+                            <td class="small text-muted">{{ m.exam_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No marks entered yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="attendanceTab">
+        {% if attendance_records %}
+        <div class="table-responsive attendance-scroll">
+            <table class="table table-border table-hover">
+                <thead class="table-dark">
+                    <tr><th>Date</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in attendance_records %}
+                    <tr>
+                        <td>{{ a.date }}</td>
+                        <td>
+                            {% if a.status == 'Present' %}<span class="badge bg-success">Present</span>
+                            {% elif a.status == 'Absent' %}<span class="badge bg-danger">Absent</span>
+                            {% else %}<span class="badge bg-warning text-dark">Late</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No attendance records available yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="assignTab">
+        {% if assignments %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr><th>Title</th><th>Subject</th><th>Due Date</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for a in assignments %}
+                <tr>
+                    <td>{{ a.title }}</td>
+                    <td>{{ a.subject }}</td>
+                    <td>{{ a.due_date }}</td>
+                    <td>
+                        {% if a.status == 'Submitted' %}
+                        <span class="badge bg-success">Submitted</span>
+                        {% else %}
+                        <span class="badge bg-danger">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No assignments.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
