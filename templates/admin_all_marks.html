@@ -2,142 +2,324 @@
 {% block title %}All Marks{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0"><i class="bi bi-bar-chart text-warning"></i> All Marks</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="mb-1"><i class="bi bi-bar-chart text-warning"></i> All Marks</h3>
+        <p class="text-muted small mb-0">Complete record of every marks entry across the school.</p>
+    </div>
     <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-        <i class="bi bi-printer"></i> Print
+        <i class="bi bi-print"></i> Print
     </button>
 </div>
 
-<!-- Filters: Section, Subject, Student, Exam/Test -->
-<form method="GET" class="row g-2 mb-3">
-    <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">Section:</label>
-        <select class="form-select" name="section_id" title="Filter by section" onchange="this.form.submit()">
-            <option value="">-- All Sections --</option>
-            {% for sec in sections %}
-            <option value="{{ sec.id }}" {% if section_filter == sec.id|string %}selected{% endif %}>
-                {{ sec.section_name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">Subject:</label>
-        <select class="form-select" name="subject" title="Filter by subject" onchange="this.form.submit()">
-            <option value="">-- All Subjects --</option>
-            {% for sub in subjects %}
-            <option value="{{ sub.subject_name }}" {% if subject_filter == sub.subject_name %}selected{% endif %}>
-                {{ sub.subject_name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">Student:</label>
-        <select class="form-select" name="student_id" title="Filter by student" onchange="this.form.submit()">
-            <option value="">-- All Students --</option>
-            {% for st in students %}
-            <option value="{{ st.id }}" {% if student_filter == st.id|string %}selected{% endif %}>
-                {{ st.name }} ({{ st.roll_no }} - {{ st.section_name }})
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">Type of Test:</label>
-        <select class="form-select" name="exam_name" title="Filter by exam / test" onchange="this.form.submit()">
-            <option value="">-- All Tests --</option>
-            {% for e in exams %}
-            <option value="{{ e.exam_name }}" {% if exam_filter == e.exam_name %}selected{% endif %}>
-                {{ e.exam_name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    {% if section_filter or subject_filter or student_filter or exam_filter %}
-    <div class="col-md-3 d-flex align-items-end mt-2">
-        <a href="{{ url_for('admin_all_marks') }}" class="btn btn-outline-secondary w-100">
-            <i class="bi bi-x-circle"></i> Clear All Filters
-        </a>
-    </div>
-    {% endif %}
-</form>
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Section</label>
+                <select class="form-select form-select-sm" name="section_id" onchange="this.form.submit()" title="Filter by section">
+                    <option value="">All Sections</option>
+                    {% for sec in sections %}
+                    <option value="{{ sec.id }}" {% if section_filter == sec.id|string %}selected{% endif %}>
+                        {{ sec.section_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Subject</label>
+                <select class="form-select form-select-sm" name="subject" onchange="this.form.submit()" title="Filter by subject">
+                    <option value="">All Subjects</option>
+                    {% for sub in subjects %}
+                    <option value="{{ sub.subject_name }}" {% if subject_filter == sub.subject_name %}selected{% endif %}>
+                        {{ sub.subject_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Student</label>
+                <select class="form-select form-select-sm" name="student_id" id="studentFilter" title="Filter by student">
+                    {% for st in students %}
+                    <option value="{{ st.id }}" {% if student_filter == st.id|string %}selected{% endif %}>
+                        {{ st.name }} ({{ st.roll_no }} - {{ st.section_name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Type of Test</label>
+                <select class="form-select form-select-sm" name="exam_name" onchange="this.form.submit()" title="Filter by exam / test">
+                    <option value="">All Tests</option>
+                    {% for e in exams %}
+                    <option value="{{ e.exam_name }}" {% if exam_filter == e.exam_name %}selected{% endif %}>
+                        {{ e.exam_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-<!-- Active filters summary -->
-{% if section_filter or subject_filter or student_filter or exam_filter %}
-<div class="mb-3 small">
-    <span class="text-muted">Active filters:</span>
-    {% if subject_filter %}<span class="badge bg-success me-1">Subject: {{ subject_filter }}</span>{% endif %}
-    {% if exam_filter %}<span class="badge bg-warning text-dark me-1">Test: {{ exam_filter }}</span>{% endif %}
-    {% if student_filter %}
-        {% for st in students %}
-            {% if st.id|string == student_filter %}
-                <span class="badge bg-info me-1">Student: {{ st.name }} ({{ st.roll_no }})</span>
+            {% if section_filter or subject_filter or student_filter or exam_filter %}
+            <div class="col-12 d-flex flex-wrapgap-2 align-items-center mt-2">
+                <span class="text-muted small me-1">Active filter:</span>
+                {% if subject_filter %}<span class="badge bg-success">Subject: {{ subject_filter }}</span>{% endif %}
+                {% if exam_filter %}<span class="badge bg-warning">Test: {{ exam_filter }}</span>{% endif %}
+                {% if student_filter %}
+                <span class="badge bg-info">Student: {{ students|selectattr('id', 'equalto', student_filter|int)|first.name }}</span>{% endif %}
+                {% if section_filter %}
+                    {% for st in student_filter %}
+                        {% if st.id|string == student_filter %}
+                            <span class="badge bg-info">Student: {{ st.name }} ({{ st.roll_no }}})</span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% if section_filter %}
+                    {% for sec in sections %}
+                        {% if sec.id|string == section_filter %}
+                            <span class="badge bg-primary">Section: {{ sec.section_name }}</span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                <a href="{{ url_for('admin_all_marks') }}" class="btn btn-outline-secondary btn-sm ms-auto">
+                    <i class="bi bi-x-circle"></i> Clear all
+                </a>
+            </div>
             {% endif %}
-        {% endfor %}
-    {% endif %}
-    {% if section_filter %}
-        {% for sec in sections %}
-            {% if sec.id|string == section_filter %}
-                <span class="badge bg-primary me-1">Section: {{ sec.section_name }}</span>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+        </form>
+    </div>
 </div>
-{% endif %}
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body p-0">
+
+        <div class="d-flex flex-wrap gap-2 align-items-center p-3 border-bottom">
+            <div class="input-group input-group-sm" style="max-width:320px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="marksSearch" class="form-control" placeholder="Search by student, subjet, exam...">
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <label class="small text-muted mb-0" for="marksPageSize">Show</label>
+                <select id="marksPageSize" class="form-select form-select-sm" style="width: auto;" title="Rows per page">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <spam class="small text-muted" id="marksRowInfo">&mdash;</spam>
+            </div>
+        </div>
+
         {% if marks %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="marksTable">
-                <thead class="table-dark">
+        <div class="table-sticky" style="border: none; border-radius: 0;">
+            <table class="table table-hover table-zebra mb-0 align-middle" id="marksTable">
+                <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Student</th>
-                        <th>Section</th>
-                        <th>Subject</th>
-                        <th>Exam</th>
-                        <th>Marks</th>
-                        <th>Out of</th>
-                        <th>%</th>
-                        <th>Date</th>
+                        <th class="sortable" data-type="num">#</th>
+                        <th class="sortable" data-type="text">Student</th>
+                        <th class="sortable" data-type="text">Section</th>
+                        <th class="sortable" data-type="text">Exam</th>
+                        <th class="sortable" data-type="num">Marks</th>
+                        <th class="sortable" data-type="num">Out of</th>
+                        <th class="sortable sort-desc" data-type="num">%</th>
+                        <th class="sortable" data-type="date">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for m in marks %}
+                    {% set pct = (m.marks_obtained / m.total_marks * 100) | round(1) %}
                     <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ m.student_name }} <small class="text-muted">({{ m.roll_no }})</small></td>
+                        <td class="text-muted">{{ loop.index }}</td>
+                        <td>
+                            <div class="fw-medium">{{ m.student_name }}</div>
+                            <small class="text-muted">Roll No: {{ m.roll_no }}</small>
+                        </td>
                         <td><span class="badge bg-primary">{{ m.section_name }}</span></td>
                         <td>{{ m.subject }}</td>
                         <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
-                        <td class="fw-bold">{{ m.marks_obtained }}</td>
-                        <td>{{ m.total_marks }}</td>
-                        <td>
-                            {% set pct = (m.marks_obtained / m.total_marks * 100) | round(1) %}
+                        <td class="fw-semibold" data-sort="{{ m.marks_obtained }}">{{ m.marks_obtained }}</td>
+                        <td data-sort="{{ pct }}">
                             {% if pct >= 75 %}
-                            <span class="text-success fw-bold">{{ pct }}%</span>
+                            <span class="text-success fw-semibold">{{ pct }}%</span>
                             {% elif pct >= 50 %}
-                            <span class="text-warning fw-bold">{{ pct }}%</span>
+                            <span class="text-warning fw-semibold">{{ pct }}%</span>
                             {% else %}
-                            <span class="text-danger fw-bold">{{ pct }}%</span>
+                            <span class="text-danger fw-semibold">{{ pct }}%</span>
                             {% endif %}
                         </td>
-                        <td class="small text-muted">{{ m.exam_date }}</td>
+                        <td class="small text-muted" data-sort="{{ m.exam_date }}">{{ m.exam_date }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="p-2 text-muted small border-top">Total: {{ marks | length }} entries</div>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center p-3 border-top">
+            <span class="small text-muted" id="marksPageStatus">&mdash;</span>
+            <nav class="ms-auto" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0" id="marksPagination"></ul>
+            </nav>
+        </div>
+
         {% else %}
-        <div class="p-4 text-center text-muted">
-            <i class="bi bi-bar-chart fs-1"></i>
-            <p class="mt-2">No marks found.</p>
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-bar-chart fs-1 d-block mb-2 text-secondary"></i>
+            <p class="mb-0">No marks found for the selected filters.</p>
         </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    const studentSelect = document.getElementById('studentFilter');
+    if (studentSelect) {
+        new Choices(studentSelect, {
+            searchPlaceholderValue: 'Search by name or roll...',
+            itemSelectText: '',
+            shouldSort: false
+        });
+        studentSelect.addEventListener('change', function() {
+            this.form.submit(); });
+    }
+
+    (function() {
+        const table = document.getElementById('marksTable');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const allRows = Array.from(tbody.querySelectorAll('tr'));
+        const searchInput = document.getElementById('marksSearch');
+        const pageSizeEl = document.getElementById('marksPageSize');
+        const rowInfo = document.getElementById('marksRowInfo');
+        const pagination = document.getElementById('marksPagination');
+        const pageStatus = document.getElementById('marksPageStatus');
+
+        let filter = allRows.slice();
+        let currentPage = 1;
+        let pageSize = parseInt(pageSizeEl.value, 10);
+        let sortCol = 7;
+        let sortDir = 'desc';
+        let sortType = 'num';
+
+        function applySearch() {
+            const q = (searchInput.value || '').trim().toLowerCase();
+            if (!q) {
+                filtered = allRows.slice();
+            } else {
+                filtered = allRows.filter(function(row) {
+                    return row.innerText.toLowerCase().indexOf(q) !== -1;
+                });
+            }
+            currentPage = 1;
+            applySort();
+        }
+
+        function cellValue(row, col, type) {
+            const cell = row.children[col];
+            if (!cell) return '';
+            const raw = cell.getAttribute('data-sort') || cell.innerText.trim();
+            if (type === 'num') return parseFloat(raw) || 0;
+            if (type === 'date') return new Date(raw).getTime() || 0;
+            return raw.toLowerCase();
+        }
+
+        function applySort() {
+            filtered.sort(function(a, b) {
+                const av = cellValue(a, sortCol, sortType);
+                const bv = cellValue(b, sortCol, sortType);
+                if (av < bv) return sortDir === 'asc' ? -1 : 1;
+                if (av > bv) return sortDir === 'asc' ? 1 : -1;
+                return 0;
+            })
+            render();
+        }
+        table.querySelectorAll('th.sortable').forEach(function(th, idx) {
+            th.addEventListener('click', function() {
+                const type = th.getAttribute('data-type') || 'text';
+                if (sortCol === idx) {
+                    sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
+                } else {
+                    sortCol = idx;
+                    sortType = type;
+                    sortDir = 'asc';
+                }
+                table.querySelectorAll('th.sortable').forEach(function(h) {
+                    h.classList.remove('sort-asc', 'sort-desc');
+                });
+                th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+                currentPage = 1;
+                applySort();
+            });
+        });
+
+        function render() {
+            const total = filtered.length;
+            const totalPages = Math.max(1, Math.celi(total / pageSize ));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, total);
+
+            allRows.forEach(function(r) { r.style.display = 'none'; });
+            filtered.slice(Start, end).forEach(function(r) { r.style.display = ''; });
+            filtered.forEach(function(r) { tbody.appendChild(r); });
+
+            if (total === 0) {
+                rowInfo.innerText = 'No matching rows';
+                pageStatus.innerText = '';
+            } else {
+                rowInfo.innerText = 'of' + total +
+                    (total === allRows.length ? 'entries' : '(filtered from ' + allRows.length + ')');
+                pageStatus.innerText = 'Showing ' + (start + 1) + '-' + end + ' of ' + total;
+            }
+
+            pagination.innerHTML = '';
+            function addBtn(label, page, opts) {
+                opts = opts || {};
+                const li = document.createElement('li');
+                li.className = 'page-item' + (opts.active ? 'active' : '') + (opts.disabled ? ' disabled' : '');
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.innerHTML = label;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (opts.disabled || opts.active) return;
+                    currentPage = page;
+                    render();
+                });
+                li.appenedChild(a);
+                pagination.appendChild(li);
+            }
+            addBtn('&laquo;', current - 1, { disabled: currentPage === 1 });
+            const windowSize = 5;
+            let startP = Math.max(1, currentPage - Math.floor(windowSize / 2 ));
+            startP = Math.max(1, endP - windowSize + 1);
+            if (startP > 1) {
+                addBtn('1', 1);
+                if (startP > 2) addBtn('&hellip;', 0, { disabled: true });
+            }
+            for (let p = startP; p <= endP; p++) {
+                addBtn(string(p), p, { active: p === currentPage });
+            }
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) addBtn('&hellip;', 0, { disabled: true });
+                addBtn(String(totalPages), totalPages);
+            }
+            addBtn('&raquo;', currentPage + 1, { disabled: currentPage === totalPages });
+        }
+
+        searchInput.addEventListener('input', aplySearch);
+        pageSizeEl.addEventListener('change', function() {
+            pageSize = parseInt(this.value, 10);
+            currentPage = 1;
+            render();
+        });
+
+        applySort();        
+    })();
+</script>
+
 {% endblock %}
