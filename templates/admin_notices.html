@@ -1,9 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Notices{% endblock %}
+{% block title %}Announcements{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h3 class="mb-3"><i class="bi bi-megaphone"></i> Notices</h3>
-    <div class="alert alert-info mb-0">This page is under construction.</div>
+<div class="row g-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark w-bold">
+                <i class="bi bi-megaphone-fill"></i> Post Announcement
+            </div>
+            <div class="card-body">
+                {% if msg %}
+                    {% if 'SUCCESS' in msg %}
+                    <div class="alert alert-success py-2">{{ msg.replace('SUCCESS: ', '') }}</div>
+                    {% else %}
+                    <div class="alert alert-danger py-2">{{ msg }}</div>
+                    {% endif %}
+                {% endif %}
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Title</label>
+                        <input type="text" class="form-control" name="title" placeholder="Announcement title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Content</label>
+                        <textarea class="form-control" name="content" rows="4" placeholder="Write the announcement..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Show To</label>
+                        <select class="form-select" name="target_role" title="Target Audience">
+                            <option value="all">Everyone</option>
+                            <option value="student">Students Only</option>
+                            <option value="teacher">Teachers Only</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-send"></i> Post Announcement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <h5 class="mb-3"><i class="bi bi-bell-fill text-warning"></i> All Announcements</h5>
+        {% if notices %}
+            {% for n in notices %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ n.title }}</h6>
+                            <p class="mb-1 text-muted">{{ n.content }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-person"></i> {{ n.posted_by_name }} &nbsp;|&nbsp;
+                                <i class="bi bi-clock"></i> {{ n.created_at.strftime('%d %b %Y, %I:%M %p') }} &nbsp;|&nbsp;
+                                <span class="badge bg-secondary">{{ n.target_role }}</span>
+                            </small>
+                        </div>
+                        <a href="{{ url_for('delete_notice', nid=n.id) }}" class="btn btn-sm btn-outline-danger ms-2" onclick="return confirm('Delete this announcement?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="text-muted text-center py-5">
+            <i class="bi bi-megaphone fs-1"></i>
+            <p class="mt-2">No announcements posted yet.</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
 {% endblock %}
