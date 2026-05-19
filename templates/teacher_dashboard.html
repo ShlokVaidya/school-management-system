@@ -2,8 +2,141 @@
 {% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h3 class="mb-3"><i class="bi bi-person-workspace"></i> Teacher Dashboard</h3>
-    <div class="alert alert-info mb-0">This page is under construction.</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-speedometer2 text-success"></i> Teacher Dashboard</h3>
+        <p class="text-muted small mb-0">
+            Welcome, {{ session.full_name }}!
+        </p>
+    </div>
 </div>
+
+<div class="card shadow-sm mb-4 border-success">
+    <div class="card-body py-3">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="small text-muted mb-1">
+                    <i class="bi bi-grid-1x2 text-success"></i> My Sections
+                </div>
+                {% if section_names %}
+                    {% for sn in section_names %}
+                        <span class="badge bg-success me-1">{{ sn }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-danger small">No sections assigned yet. Contact admin.</span>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted mb-1">
+                    <i class="bi bi-book text-info"></i> My Subjects
+                </div>
+                {% if my_subjects %}
+                    {% for sub in my_subjects %}
+                        <span class="badge bg-info text-dark me-1">{{ sub }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-danger small">No subjects assigned yet. Contact admin.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 card-border-success h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-success">{{ student_count }}</div>
+                <div class="small text-muted"><i class="bi bi-people"></i> Total Students</div>
+                <a href="{{ url_for('teacher_students') }}" class="btn btn-outline-success btn-sm mt-2">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 card-border-info h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-info">{{ assignment_count }}</div>
+                <div class="small text-muted"><i class="bi bi-file-journal-text"></i> Assignments</div>
+                <a href="{{ url_for('teacher_assignments') }}" class="btn btn-outline-info btn-sm mt-2">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 card-border-warning h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-warning"><i class="bi bi-pencil-square"></i></div>
+                <div class="small text-muted">Enter Marks</div>
+                <a href="{{ url_for('enter_marks') }}" class="btn btn-outline-warning btn-sm mt-2">Go</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 card-border-primary h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-primary"><i class="bi bi-calendar-check"></i></div>
+                <div class="small text-muted">Attendance</div>
+                <a href="{{ url_for('teacher_attendance') }}" class="btn btn-outline-primary btn-sm mt-2">Go</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="bi bi-lightning-fill"></i> Quick Actions
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('add_student') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-person-plus text-success"></i> Add New Student
+                </a>
+                <a href="{{ url_for('add_assignment') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-journal-plus text-info"></i> Create Assignment
+                </a>
+                <a href="{{ url_for('enter_marks') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil text-warning"></i> Enter Marks
+                </a>
+                <a href="{{ url_for('teacher_attendance') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-calendar-check text-primary"></i> Take Attendance
+                </a>
+                <a href="{{ url_for('section_charts') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-graph-up text-danger"></i> View Charts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white fw-bold">
+                <i class="bi bi-clock-history"></i> Recently Entered Marks
+            </div>
+            <div class="card-body p-0">
+                {% if recent_marks %}
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for m in recent_marks %}
+                        <tr>
+                            <td>{{ m.student_name }}</td>
+                            <td>{{ m.subject }}</td>
+                            <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
+                            <td><strong>{{ m.marks_obtained }}/{{ m.total_marks }}</strong></td>
+                            <td class="small text-muted">{{ m.exam_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted p-3 mb-0">No marks entered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

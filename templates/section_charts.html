@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Section Performance Charts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-graph-up text-danger"></i> Section Performance Analysis</h3>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Select Section</label>
+                <select class="form-select" id="sectionSelect" title="Select Section">
+                    <option value="">-- Select Section --</option>
+                    {% for sec in sections %}
+                        <option value="{{ sec.id }}">{{ sec.section_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 mt-3">
+                <button class="btn btn-danger" onclick="loadCharts()">
+                    <i class="bi bi-bar-chart-line"></i> Load Charts
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="chartsArea" style="display:none;">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white fw-bold">
+                    <i class="bi bi-book"></i> Subject-wise Average %
+                </div>
+                <div class="card-body">
+                    <canvas id="subjectChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">
+                    <i class="bi bi-trophy"></i> Student-wise Average %
+                </div>
+                <div class="card-body">
+                    <canvas id="studentChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="noDataMsg" style="display:none;" class="alert alert-info mt-3">
+    <i class="bi bi-info-circle"></i> No marks data found for this section yet.
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var subjectChartObj = null;
+    var studentChartObj = null;
+
+    function loadCharts() {
+        var sectionId = document.getElementById('sectionSelect').value;
+        if (!sectionId) {
+            alert('Please select a section first!');
+            return;
+        }
+
+        fetch('/teacher/section_chart_data?section_id=' + sectionId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+
+            if (data.sub_labels.length === 0) {
+                document.getElementById('chartsArea').style.display = 'none';
+                document.getElementById('noDataMsg').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noDataMsg').style.display = 'none';
+            document.getElementById('chartsArea').style.display = 'block';
+
+            if (subjectChartObj) subjectChartObj.destroy();
+            if (studentChartObj) studentChartObj.destroy();
+
+            var ctx1 = document.getElementById('subjectChart').getContext('2d');
+            subjectChartObj = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: data.sub_labels,
+                    datasets: [{
+                        label: 'Average %',
+                        data: data.sub_data,
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)', 'rgba(13, 110, 253, 0.7)',
+                            'rgba(25, 135, 84, 0.7)', 'rgba(255, 193, 7, 0.7)',
+                            'rgba(13, 202, 240, 0.7)', 'rgba(111, 66, 193, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y : { beginAtZero: true, max: 100 } }
+                }
+            });
+            
+            var ctx2 = document.getElementById('studentChart').getContext('2d');
+            studentChartObj = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: data.stud_labels,
+                    datasets: [{
+                        label: 'Overall Average %',
+                        data: data.stud_data,
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: { x: { beginAtZero: true, max:100 } }
+                }
+            });
+        })
+        .catch(function(err) {
+            console.log('Error loading chart data: ', err);
+        });
+    }
+</script>
+
+{% endblock %}
