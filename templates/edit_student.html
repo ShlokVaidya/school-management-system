@@ -9,12 +9,13 @@
                 <h5 class="mb-0"><i class="bi bi-pencil"></i> Edit Student &mdash; {{ student.name }}</h5>
             </div>
             <div class="card-body">
-                {% if 'SUCCESS' in msg %}
-                <div class="alert alert-success">{{ msg.replace('SUCCESS: ', '') }}</div>
-                {% else %}
-                <div class="alert alert-danger">{{ msg }}</div>
+                {% if msg %}
+                    {% if 'SUCCESS' in msg %}
+                    <div class="alert alert-success">{{ msg.replace('SUCCESS: ', '') }}</div>
+                    {% else %}
+                    <div class="alert alert-danger">{{ msg }}</div>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
 
                 <form method="POST">
                     <h6 class="fw-bold text-primary mt-2"><i class="bi bi-person"></i> Basic Detailss</h6>
@@ -34,7 +35,7 @@
                                 {% for sec in sections %}
                                 <option value="{{ sec.id }}" {% if student.section_id == sec.id %}selected{% endif %}>
                                     {{ sec.section_name }}
-                                </option>}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
