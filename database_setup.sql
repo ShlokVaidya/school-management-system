@@ -74,7 +74,7 @@ CREATE TABLE attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     date DATE,
-    status VARCHAR(10) DEFAULT 'Present', -- Present, Absent, Late
+    status VARCHAR(10) DEFAULT 'Present',   -- Present, Absent, Late
     FOREIGN KEY (student_id) REFERENCES students(id)
 );
 
@@ -90,8 +90,8 @@ CREATE TABLE teacher_sections (
 CREATE TABLE teacher_subjects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     teacher_id INT,
-    subject_id varchar(50),
-    UNIQUE KEY unique_teacher_subject (teacher_id, subject_id),
+    subject_name VARCHAR(50),
+    UNIQUE KEY unique_teacher_subject (teacher_id, subject_name),
     FOREIGN KEY (teacher_id) REFERENCES users(id)
 );
 
@@ -99,51 +99,15 @@ CREATE TABLE announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200),
     content TEXT,
-    posted_by INT,
-    target_role VARCHAR(20) DEFAULT 'all', -- 'all', 'students', 'teachers'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    posted_by INT,    -- user id of who posted it
+    target_role VARCHAR(20) DEFAULT 'all',   -- 'all', 'student', 'teacher'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (posted_by) REFERENCES users(id)
 );
-
 
 INSERT INTO users (username, password, role, full_name) VALUES
 ('admin', 'admin123', 'admin', 'Administrator');
 
-INSERT INTO sections (section_name) VALUES ('12-A'), ('12-B');
-
-INSERT INTO users (username, password, role, full_name, section_id) VALUES
-('teacher1', 'teacher123', 'teacher', 'John Doe', 1),
-('teacher2', 'teacher123', 'teacher', 'Jane Doe', 2);
-
-INSERT INTO teacher_sections (teacher_id, section_id) VALUES
-(1, 1), -- teacher1 assigned to section 12-A
-(2, 2); -- teacher2 assigned to section 12-B
-
-INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES
-(1, 'Mathematics'), -- teacher1 teaches Mathematics
-(2, 'Computer Science'); -- teacher2 teaches Computer Science
-
 INSERT INTO users (username, password, role, full_name) VALUES
-('student1', 'student123', 'student', 'Alice Smith'),
-('student2', 'student123', 'student', 'Diana Prince');
-
-INSERT INTO students (name, roll_no, section_id, user_id) VALUES
-('Alice Smith', '001', 1, 3), -- student1 in section 12-A
-('Diana Prince', '002', 2, 4); -- student2 in section 12-B
-
-INSERT INTO subjects (subject_name) VALUES 
-('Mathematics'),
-('English'),
-('Chemistry'),
-('Physics'),
-('Biology'),
-('Computer Science');
-
-INSERT INTO marks (student_id, subject, exam_name, marks_obtained, total_marks, exam_date) VALUES
-(1, 'Mathematics', 'Midterm', 85, 100, '2024-05-01'),
-(1, 'English', 'Midterm', 78, 100, '2024-05-02'),
-(2, 'Computer Science', 'Midterm', 92, 100, '2024-05-01'),
-(2, 'Mathematics', 'Midterm', 88, 100, '2024-05-02');
-
-
-
+('vp1',    'vp123',    'vice_principal', 'Mrs. Anita Desai (Vice Principal)'),
+('coord1', 'coord123', 'coordinator',    'Mr. Vikram Mehta (Coordinator)');
