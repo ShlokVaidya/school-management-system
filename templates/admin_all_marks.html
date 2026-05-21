@@ -8,7 +8,7 @@
         <p class="text-muted small mb-0">Complete record of every marks entry across the school.</p>
     </div>
     <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-        <i class="bi bi-print"></i> Print
+        <i class="bi bi-printer"></i> Print
     </button>
 </div>
 
@@ -40,6 +40,7 @@
             <div class="col-md-3">
                 <label class="form-label">Student</label>
                 <select class="form-select form-select-sm" name="student_id" id="studentFilter" title="Filter by student">
+                    <option value="">All Students</option>
                     {% for st in students %}
                     <option value="{{ st.id }}" {% if student_filter == st.id|string %}selected{% endif %}>
                         {{ st.name }} ({{ st.roll_no }} - {{ st.section_name }})
@@ -60,16 +61,14 @@
             </div>
 
             {% if section_filter or subject_filter or student_filter or exam_filter %}
-            <div class="col-12 d-flex flex-wrapgap-2 align-items-center mt-2">
-                <span class="text-muted small me-1">Active filter:</span>
+            <div class="col-12 d-flex flex-wrap gap-2 align-items-center mt-2">
+                <span class="text-muted small me-1">Active filters:</span>
                 {% if subject_filter %}<span class="badge bg-success">Subject: {{ subject_filter }}</span>{% endif %}
                 {% if exam_filter %}<span class="badge bg-warning">Test: {{ exam_filter }}</span>{% endif %}
                 {% if student_filter %}
-                <span class="badge bg-info">Student: {{ students|selectattr('id', 'equalto', student_filter|int)|first.name }}</span>{% endif %}
-                {% if section_filter %}
-                    {% for st in student_filter %}
+                    {% for st in students %}
                         {% if st.id|string == student_filter %}
-                            <span class="badge bg-info">Student: {{ st.name }} ({{ st.roll_no }}})</span>
+                            <span class="badge bg-info">Student: {{ st.name }} ({{ st.roll_no }})</span>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
@@ -92,10 +91,11 @@
 <div class="card">
     <div class="card-body p-0">
 
+        <!-- Toolbar: search + rows-per-page -->
         <div class="d-flex flex-wrap gap-2 align-items-center p-3 border-bottom">
-            <div class="input-group input-group-sm" style="max-width:320px;">
+            <div class="input-group input-group-sm" style="max-width: 320px;">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" id="marksSearch" class="form-control" placeholder="Search by student, subjet, exam...">
+                <input type="text" id="marksSearch" class="form-control" placeholder="Search by student, subject, exam...">
             </div>
             <div class="ms-auto d-flex align-items-center gap-2">
                 <label class="small text-muted mb-0" for="marksPageSize">Show</label>
@@ -105,7 +105,7 @@
                     <option value="50">50</option>
                     <option value="100">100</option>
                 </select>
-                <spam class="small text-muted" id="marksRowInfo">&mdash;</spam>
+                <span class="small text-muted" id="marksRowInfo">&mdash;</span>
             </div>
         </div>
 
@@ -117,6 +117,7 @@
                         <th class="sortable" data-type="num">#</th>
                         <th class="sortable" data-type="text">Student</th>
                         <th class="sortable" data-type="text">Section</th>
+                        <th class="sortable" data-type="text">Subject</th>
                         <th class="sortable" data-type="text">Exam</th>
                         <th class="sortable" data-type="num">Marks</th>
                         <th class="sortable" data-type="num">Out of</th>
@@ -131,12 +132,13 @@
                         <td class="text-muted">{{ loop.index }}</td>
                         <td>
                             <div class="fw-medium">{{ m.student_name }}</div>
-                            <small class="text-muted">Roll No: {{ m.roll_no }}</small>
+                            <small class="text-muted">Roll {{ m.roll_no }}</small>
                         </td>
                         <td><span class="badge bg-primary">{{ m.section_name }}</span></td>
                         <td>{{ m.subject }}</td>
                         <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
                         <td class="fw-semibold" data-sort="{{ m.marks_obtained }}">{{ m.marks_obtained }}</td>
+                        <td class="text-muted" data-sort="{{ m.total_marks }}">{{ m.total_marks }}</td>
                         <td data-sort="{{ pct }}">
                             {% if pct >= 75 %}
                             <span class="text-success fw-semibold">{{ pct }}%</span>
@@ -172,154 +174,153 @@
 
 {% block scripts %}
 <script>
+const studentSelect = document.getElementById('studentFilter');
+if (studentSelect) {
+    new Choices(studentSelect, {
+        searchPlaceholderValue: 'Search by name or roll...',
+        itemSelectText: '',
+        shouldSort: false
+    });
+    studentSelect.addEventListener('change', function() { this.form.submit(); });
+}
 
-    const studentSelect = document.getElementById('studentFilter');
-    if (studentSelect) {
-        new Choices(studentSelect, {
-            searchPlaceholderValue: 'Search by name or roll...',
-            itemSelectText: '',
-            shouldSort: false
-        });
-        studentSelect.addEventListener('change', function() {
-            this.form.submit(); });
+(function() {
+    const table = document.getElementById('marksTable');
+    if (!table) return;
+
+    const tbody       = table.querySelector('tbody');
+    const allRows     = Array.from(tbody.querySelectorAll('tr'));
+    const searchInput = document.getElementById('marksSearch');
+    const pageSizeEl  = document.getElementById('marksPageSize');
+    const rowInfo     = document.getElementById('marksRowInfo');
+    const pagination  = document.getElementById('marksPagination');
+    const pageStatus  = document.getElementById('marksPageStatus');
+
+    let filtered = allRows.slice();
+    let currentPage = 1;
+    let pageSize = parseInt(pageSizeEl.value, 10);
+    let sortCol = 7;
+    let sortDir = 'desc';
+    let sortType = 'num';
+
+    function applySearch() {
+        const q = (searchInput.value || '').trim().toLowerCase();
+        if (!q) {
+            filtered = allRows.slice();
+        } else {
+            filtered = allRows.filter(function(row) {
+                return row.innerText.toLowerCase().indexOf(q) !== -1;
+            });
+        }
+        currentPage = 1;
+        applySort();
     }
 
-    (function() {
-        const table = document.getElementById('marksTable');
-        if (!table) return;
-
-        const tbody = table.querySelector('tbody');
-        const allRows = Array.from(tbody.querySelectorAll('tr'));
-        const searchInput = document.getElementById('marksSearch');
-        const pageSizeEl = document.getElementById('marksPageSize');
-        const rowInfo = document.getElementById('marksRowInfo');
-        const pagination = document.getElementById('marksPagination');
-        const pageStatus = document.getElementById('marksPageStatus');
-
-        let filter = allRows.slice();
-        let currentPage = 1;
-        let pageSize = parseInt(pageSizeEl.value, 10);
-        let sortCol = 7;
-        let sortDir = 'desc';
-        let sortType = 'num';
-
-        function applySearch() {
-            const q = (searchInput.value || '').trim().toLowerCase();
-            if (!q) {
-                filtered = allRows.slice();
+    function cellValue(row, col, type) {
+        const cell = row.children[col];
+        if (!cell) return '';
+        const raw = cell.getAttribute('data-sort') || cell.innerText.trim();
+        if (type === 'num')  return parseFloat(raw) || 0;
+        if (type === 'date') return new Date(raw).getTime() || 0;
+        return raw.toLowerCase();
+    }
+    function applySort() {
+        filtered.sort(function(a, b) {
+            const av = cellValue(a, sortCol, sortType);
+            const bv = cellValue(b, sortCol, sortType);
+            if (av < bv) return sortDir === 'asc' ? -1 : 1;
+            if (av > bv) return sortDir === 'asc' ?  1 : -1;
+            return 0;
+        });
+        render();
+    }
+    table.querySelectorAll('th.sortable').forEach(function(th, idx) {
+        th.addEventListener('click', function() {
+            const type = th.getAttribute('data-type') || 'text';
+            if (sortCol === idx) {
+                sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
             } else {
-                filtered = allRows.filter(function(row) {
-                    return row.innerText.toLowerCase().indexOf(q) !== -1;
-                });
+                sortCol = idx;
+                sortType = type;
+                sortDir = 'asc';
             }
+            table.querySelectorAll('th.sortable').forEach(function(h) {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+            th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
             currentPage = 1;
             applySort();
+        });
+    });
+
+    function render() {
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * pageSize;
+        const end   = Math.min(start + pageSize, total);
+
+        allRows.forEach(function(r) { r.style.display = 'none'; });
+        filtered.slice(start, end).forEach(function(r) { r.style.display = ''; });
+        filtered.forEach(function(r) { tbody.appendChild(r); });
+
+        if (total === 0) {
+            rowInfo.innerText = 'No matching rows';
+            pageStatus.innerText = '';
+        } else {
+            rowInfo.innerText = 'of ' + total +
+                (total === allRows.length ? ' entries' : ' (filtered from ' + allRows.length + ')');
+            pageStatus.innerText = 'Showing ' + (start + 1) + '-' + end + ' of ' + total;
         }
 
-        function cellValue(row, col, type) {
-            const cell = row.children[col];
-            if (!cell) return '';
-            const raw = cell.getAttribute('data-sort') || cell.innerText.trim();
-            if (type === 'num') return parseFloat(raw) || 0;
-            if (type === 'date') return new Date(raw).getTime() || 0;
-            return raw.toLowerCase();
-        }
-
-        function applySort() {
-            filtered.sort(function(a, b) {
-                const av = cellValue(a, sortCol, sortType);
-                const bv = cellValue(b, sortCol, sortType);
-                if (av < bv) return sortDir === 'asc' ? -1 : 1;
-                if (av > bv) return sortDir === 'asc' ? 1 : -1;
-                return 0;
-            })
-            render();
-        }
-        table.querySelectorAll('th.sortable').forEach(function(th, idx) {
-            th.addEventListener('click', function() {
-                const type = th.getAttribute('data-type') || 'text';
-                if (sortCol === idx) {
-                    sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
-                } else {
-                    sortCol = idx;
-                    sortType = type;
-                    sortDir = 'asc';
-                }
-                table.querySelectorAll('th.sortable').forEach(function(h) {
-                    h.classList.remove('sort-asc', 'sort-desc');
-                });
-                th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-                currentPage = 1;
-                applySort();
+        pagination.innerHTML = '';
+        function addBtn(label, page, opts) {
+            opts = opts || {};
+            const li = document.createElement('li');
+            li.className = 'page-item' + (opts.active ? ' active' : '') + (opts.disabled ? ' disabled' : '');
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.innerHTML = label;
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (opts.disabled || opts.active) return;
+                currentPage = page;
+                render();
             });
-        });
-
-        function render() {
-            const total = filtered.length;
-            const totalPages = Math.max(1, Math.celi(total / pageSize ));
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            const start = (currentPage - 1) * pageSize;
-            const end = Math.min(start + pageSize, total);
-
-            allRows.forEach(function(r) { r.style.display = 'none'; });
-            filtered.slice(Start, end).forEach(function(r) { r.style.display = ''; });
-            filtered.forEach(function(r) { tbody.appendChild(r); });
-
-            if (total === 0) {
-                rowInfo.innerText = 'No matching rows';
-                pageStatus.innerText = '';
-            } else {
-                rowInfo.innerText = 'of' + total +
-                    (total === allRows.length ? 'entries' : '(filtered from ' + allRows.length + ')');
-                pageStatus.innerText = 'Showing ' + (start + 1) + '-' + end + ' of ' + total;
-            }
-
-            pagination.innerHTML = '';
-            function addBtn(label, page, opts) {
-                opts = opts || {};
-                const li = document.createElement('li');
-                li.className = 'page-item' + (opts.active ? 'active' : '') + (opts.disabled ? ' disabled' : '');
-                const a = document.createElement('a');
-                a.className = 'page-link';
-                a.href = '#';
-                a.innerHTML = label;
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (opts.disabled || opts.active) return;
-                    currentPage = page;
-                    render();
-                });
-                li.appenedChild(a);
-                pagination.appendChild(li);
-            }
-            addBtn('&laquo;', current - 1, { disabled: currentPage === 1 });
-            const windowSize = 5;
-            let startP = Math.max(1, currentPage - Math.floor(windowSize / 2 ));
-            startP = Math.max(1, endP - windowSize + 1);
-            if (startP > 1) {
-                addBtn('1', 1);
-                if (startP > 2) addBtn('&hellip;', 0, { disabled: true });
-            }
-            for (let p = startP; p <= endP; p++) {
-                addBtn(string(p), p, { active: p === currentPage });
-            }
-            if (endP < totalPages) {
-                if (endP < totalPages - 1) addBtn('&hellip;', 0, { disabled: true });
-                addBtn(String(totalPages), totalPages);
-            }
-            addBtn('&raquo;', currentPage + 1, { disabled: currentPage === totalPages });
+            li.appendChild(a);
+            pagination.appendChild(li);
         }
+        addBtn('&laquo;', currentPage - 1, { disabled: currentPage === 1 });
 
-        searchInput.addEventListener('input', aplySearch);
-        pageSizeEl.addEventListener('change', function() {
-            pageSize = parseInt(this.value, 10);
-            currentPage = 1;
-            render();
-        });
+        const windowSize = 5;
+        let startP = Math.max(1, currentPage - Math.floor(windowSize / 2));
+        let endP   = Math.min(totalPages, startP + windowSize - 1);
+        startP = Math.max(1, endP - windowSize + 1);
+        if (startP > 1) {
+            addBtn('1', 1);
+            if (startP > 2) addBtn('&hellip;', 0, { disabled: true });
+        }
+        for (let p = startP; p <= endP; p++) {
+            addBtn(String(p), p, { active: p === currentPage });
+        }
+        if (endP < totalPages) {
+            if (endP < totalPages - 1) addBtn('&hellip;', 0, { disabled: true });
+            addBtn(String(totalPages), totalPages);
+        }
+        addBtn('&raquo;', currentPage + 1, { disabled: currentPage === totalPages });
+    }
 
-        applySort();        
-    })();
+    searchInput.addEventListener('input', applySearch);
+    pageSizeEl.addEventListener('change', function() {
+        pageSize = parseInt(this.value, 10);
+        currentPage = 1;
+        render();
+    });
+
+    applySort();
+})();
 </script>
 
 {% endblock %}

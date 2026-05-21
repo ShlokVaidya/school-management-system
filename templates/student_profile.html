@@ -26,7 +26,7 @@
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
                 {% else %}
-                <a href="{{ url_for('edit_student') }}" class="btn btn-outline-warning me-2">
+                <a href="{{ url_for('edit_student', sid=student.id) }}" class="btn btn-outline-warning me-2">
                     <i class="bi bi-pencil"></i> Edit
                 </a>
                 <a href="{{ url_for('teacher_students') }}" class="btn btn-outline-secondary">
