@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}All Marks{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-table text-warning"></i> Marks Records</h3>
+    <div>
+        <a href="{{ url_for('enter_marks') }}" class="btn btn-warning me-2">
+            <i class="bi bi-plus-square"></i> Enter Marks
+        </a>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Section:</label>
+        <select class="form-select" name="section_id" title="Filter by section" onchange="this.form.submit()">
+            <option value="">-- All Sections --</option>
+            {% for sec in sections %}
+            <option value="{{ sec.id }}" {% if section_filter == sec.id|string %}selected{% endif %}>
+                {{ sec.section_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Subject:</label>
+        <select class="form-select" name="subject" title="Filter by subject" onchange="this.form.submit()">
+            <option value="">-- All Subjects --</option>
+            {% for sub in subjects %}
+            <option value="{{ sub.subject_name }}" {% if subject_filter == sub.subject_name %}selected{% endif %}>
+                {{ sub.subject_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Student:</label>
+        <select class="form-select" name="student_id" title="Filter by student" onchange="this.form.submit()">
+            <option value="">-- All Students --</option>
+            {% for st in students %}
+            <option value="{{ st.id }}" {% if student_filter == st.id|string %}selected{% endif %}>
+                {{ st.name }} ({{ st.roll_no }} - {{ st.section_name }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+     <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Type of Test:</label>
+        <select class="form-select" name="exam_name" title="Filter by exam / test" onchange="this.form.submit()">
+            <option value="">-- All Tests --</option>
+            {% for e in exams %}
+            <option value="{{ e.exam_name }}" {% if exam_filter == e.exam_name %}selected{% endif %}>
+                {{ e.exam_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if section_filter or subject_filter or student_filter or exam_filter %}
+    <div class="col-md-3 d-flex align-items-end mt-2">
+        <a href="{{ url_for('teacher_marks') }}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-x-circle"></i> Clear All Filters
+        </a>
+    </div>
+    {% endif %}
+</form>
+
+{% if section_filter or subject_filter or student_filter or exam_filter %}
+<div class="mb-3 small">
+    <span class="text-muted">Active filters:</span>
+    {% if subject_filter %}<span class="badge bg-success me-1">Subject: {{ subject_filter }}</span>{% endif %}
+    {% if exam_filter %}<span class="badge bg-warning text-dark me-1">Test: {{ exam_filter }}</span>{% endif %}
+    {% if student_filter %}
+        {% for st in students %}
+            {% if st.id|string == student_filter %}
+                <span class="badge bg-info me-1">Student: {{ st.name }} ({{ st.roll_no }})</span>
+                {% endif %}
+        {% endfor %}
+    {% endif %}
+    {% if section_filter %}
+        {% for sec in sections %}
+            {% if sec.id|string == section_filter %}
+                <span class="badge bg-primary me-1">Section: {{ sec.section_name }}</span>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if marks %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Section</th>
+                        <th>Subject</th>
+                        <th>Exam</th>
+                        <th>Marks</th>
+                        <th>%</th>
+                        <th>Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in marks %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ m.student_name }} <small class="text-muted">({{ m.roll_no }})</small></td>
+                        <td><span class="badge bg-primary">{{ m.section_name }}</span></td>
+                        <td>{{ m.subject }}</td>
+                        <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
+                        <td><strong>{{ m.marks_obtained }}/{{ m.total_marks }}</strong></td>
+                        <td>
+                            {% set pct = (m.marks_obtained / m.total_marks * 100) | round(1) %}
+                            {% if pct >= 75 %}
+                            <span class="text-success fw-bold">{{ pct }}%</span>
+                            {% elif pct >= 50 %}
+                            <span class="text-warning fw-bold">{{ pct }}%</span>
+                            {% else %}
+                            <span class="text-danger fw-bold">{{ pct }}%</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ m.exam_date }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('edit_marks', mid=m.id) }}"
+                               class="btn btn-sm btn-outline-warning me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{{ url_for('delete_marks', mid=m.id) }}"
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Delete this marks entry?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-2 text-muted small border-top">{{ marks | length }} entries</div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <i class="bi bi-bar-chart fs-1"></i>
+            <p class="mt-2">No marks found. <a href="{{ url_for('enter_marks') }}">Enter some marks.</a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
