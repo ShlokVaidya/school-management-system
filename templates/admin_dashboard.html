@@ -10,7 +10,6 @@
     </div>
 </div>
 
-<!-- =============== Summary stat cards =============== -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-lg-2">
         <div class="card h-100 card-border-primary">
@@ -62,7 +61,6 @@
     </div>
 </div>
 
-<!-- =============== Charts Row =============== -->
 <div class="row g-3 mb-4">
     <!-- Students Per Section — Donut -->
     <div class="col-md-6 col-lg-4">
@@ -79,7 +77,6 @@
         </div>
     </div>
 
-    <!-- Boys vs Girls — Donut -->
     <div class="col-md-6 col-lg-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -94,7 +91,6 @@
         </div>
     </div>
 
-    <!-- Subject-wise Avg % — Horizontal Bar -->
     <div class="col-md-12 col-lg-4">
         <div class="card h-100">
             <div class="card-header">
@@ -109,7 +105,6 @@
     </div>
 </div>
 
-<!-- =============== Quick Actions + Recent Notices =============== -->
 <div class="row g-3">
     <div class="col-md-4">
         <div class="card h-100">
@@ -126,7 +121,7 @@
                 </a>
                 <a href="{{ url_for('admin_all_marks') }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-bar-chart text-warning me-2"></i> View All Marks
-               </a>
+                </a>
                 <a href="{{ url_for('admin_notices') }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-megaphone text-danger me-2"></i> Post Announcement
                 </a>
@@ -186,17 +181,22 @@ Chart.defaults.plugins.legend.labels.padding = 14;
 fetch('/admin/chart_data')
 .then(function(res) { return res.json(); })
 .then(function(data) {
+    const secLabels = data.sec_labels || [];
+    const secData = data.sec_data || [];
+    const genderLabels = data.gender_labels || [];
+    const genderData = data.gender_data || [];
+    const subLabels = data.sub_labels || [];
+    const subData = data.sub_data || [];
 
-    // ---------- Donut: Students Per Section ----------
-    const secTotal = data.sec_data.reduce(function(a, b){ return a + b; }, 0);
+    const secTotal = secData.reduce(function(a, b){ return a + b; }, 0);
     document.getElementById('sectionTotal').innerText = secTotal + ' total';
 
     new Chart(document.getElementById('sectionChart'), {
         type: 'doughnut',
         data: {
-            labels: data.sec_labels,
+            labels: secLabels,
             datasets: [{
-                data: data.sec_data,
+                data: secData,
                 backgroundColor: PALETTE,
                 borderColor: '#ffffff',
                 borderWidth: 2,
@@ -222,16 +222,15 @@ fetch('/admin/chart_data')
         }
     });
 
-    // ---------- Donut: Boys vs Girls ----------
-    const gTotal = data.gender_data.reduce(function(a, b){ return a + b; }, 0);
+    const gTotal = genderData.reduce(function(a, b){ return a + b; }, 0);
     document.getElementById('genderTotal').innerText = gTotal + ' students';
 
     new Chart(document.getElementById('genderChart'), {
         type: 'doughnut',
         data: {
-            labels: data.gender_labels,
+            labels: genderLabels,
             datasets: [{
-                data: data.gender_data,
+                data: genderData,
                 backgroundColor: GENDER_COLORS,
                 borderColor: '#ffffff',
                 borderWidth: 2,
@@ -257,15 +256,14 @@ fetch('/admin/chart_data')
         }
     });
 
-    // ---------- Horizontal Bar: Subject-wise Avg % ----------
     new Chart(document.getElementById('subjectChart'), {
         type: 'bar',
         data: {
-            labels: data.sub_labels,
+            labels: subLabels,
             datasets: [{
                 label: 'Average %',
-                data: data.sub_data,
-                backgroundColor: data.sub_data.map(function(v){
+                data: subData,
+                backgroundColor: subData.map(function(v){
                     if (v >= 75) return '#059669';  // success
                     if (v >= 50) return '#d97706';  // warning
                     return '#dc2626';               // danger

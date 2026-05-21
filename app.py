@@ -1,9 +1,3 @@
-# app.py
-# Student Assignment Tracker & Performance Analyzer
-# Full version with CRUD, Attendance, Notices, Charts
-# Class 12 Computer Science Project
-# Made by: [Your Name], Class 12, Roll No: [Your Roll No]
-
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 import mysql.connector
 import config
@@ -26,10 +20,6 @@ def favicon():
 def public_file(filename):
     return send_from_directory(os.path.join(app.root_path, 'public'), filename)
 
-
-# -----------------------------------------------
-# Helper: connect to database
-# -----------------------------------------------
 def get_db():
     conn = mysql.connector.connect(
         host=config.MYSQL_HOST,
@@ -39,10 +29,6 @@ def get_db():
     )
     return conn
 
-# -----------------------------------------------
-# Helper: check if user is logged in with correct role
-# Returns True if ok, False otherwise
-# -----------------------------------------------
 def check_role(role):
     if 'user_id' not in session:
         return False
@@ -50,31 +36,16 @@ def check_role(role):
         return False
     return True
 
-
-# -----------------------------------------------
-# Helper: is the logged-in user allowed to see ALL student records?
-# Admin, Vice Principal, Coordinator all have full-access.
-# -----------------------------------------------
 def is_full_access():
     if 'user_id' not in session:
         return False
     return session.get('role') in ('admin', 'vice_principal', 'coordinator')
 
-
-# -----------------------------------------------
-# Helper: can this user open teacher-style pages?
-# Teachers + full-access users (admin / VP / coordinator) can.
-# Full-access users will see ALL sections and subjects.
-# -----------------------------------------------
 def check_teacher_access():
     if 'user_id' not in session:
         return False
     return session.get('role') in ('teacher', 'admin', 'vice_principal', 'coordinator')
 
-
-# -----------------------------------------------
-# Helper: get the sections this teacher is assigned to (list of ids)
-# -----------------------------------------------
 def get_teacher_sections(teacher_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -84,10 +55,6 @@ def get_teacher_sections(teacher_id):
     conn.close()
     return [r['section_id'] for r in rows]
 
-
-# -----------------------------------------------
-# Helper: get the subjects this teacher is assigned to teach (list of names)
-# -----------------------------------------------
 def get_teacher_subjects(teacher_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -97,15 +64,6 @@ def get_teacher_subjects(teacher_id):
     conn.close()
     return [r['subject_name'] for r in rows]
 
-
-# -----------------------------------------------
-# Helper: get section ids the CURRENT user is allowed to see
-# Full-access users get every section, teachers get only their assigned ones,
-# others get an empty list.
-# Returns a tuple (section_id_list, is_unlimited)
-#   is_unlimited = True  => user can see everything (don't filter at all)
-#   is_unlimited = False => only ids in section_id_list are allowed
-# -----------------------------------------------
 def allowed_section_ids():
     if is_full_access():
         return [], True
@@ -113,23 +71,12 @@ def allowed_section_ids():
         return get_teacher_sections(session['user_id']), False
     return [], False
 
-
-# -----------------------------------------------
-# Helper: get subjects the CURRENT user is allowed to see marks for
-# Full-access users get everything, teachers get only their assigned subjects.
-# Returns (subject_list, is_unlimited)
-# -----------------------------------------------
 def allowed_subjects():
     if is_full_access():
         return [], True
     if session.get('role') == 'teacher':
         return get_teacher_subjects(session['user_id']), False
     return [], False
-
-
-# ================================================
-# LOGIN / LOGOUT
-# ================================================
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -164,7 +111,6 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     role = session['role']
-    # admin / vice_principal / coordinator all land on the admin dashboard
     if role in ('admin', 'vice_principal', 'coordinator'):
         return redirect(url_for('admin_dashboard'))
     elif role == 'teacher':
@@ -179,11 +125,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
-# ================================================
-# ADMIN - DASHBOARD
-# ================================================
-
 @app.route('/admin')
 def admin_dashboard():
     if not is_full_access():
@@ -192,7 +133,6 @@ def admin_dashboard():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Count stats for the summary cards
     cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role='teacher'")
     teacher_count = cursor.fetchone()['cnt']
 
@@ -208,7 +148,6 @@ def admin_dashboard():
     cursor.execute("SELECT COUNT(*) as cnt FROM marks")
     marks_count = cursor.fetchone()['cnt']
 
-    # Get recent announcements
     cursor.execute("""
         SELECT a.*, u.full_name as posted_by_name
         FROM announcements a
@@ -229,11 +168,6 @@ def admin_dashboard():
         notices=notices
     )
 
-
-# ================================================
-# ADMIN - TEACHER MANAGEMENT (CRUD)
-# ================================================
-
 @app.route('/admin/teachers')
 def admin_teachers():
     if not is_full_access():
@@ -243,7 +177,6 @@ def admin_teachers():
     cursor.execute("SELECT * FROM users WHERE role = 'teacher' ORDER BY full_name")
     teachers = cursor.fetchall()
 
-    # For each teacher, fetch the list of sections + subjects assigned
     for t in teachers:
         cursor.execute("""
             SELECT s.section_name FROM teacher_sections ts
@@ -262,7 +195,6 @@ def admin_teachers():
     cursor.close()
     conn.close()
     return render_template('admin_teachers.html', teachers=teachers)
-
 
 @app.route('/admin/add_teacher', methods=['GET', 'POST'])
 def add_teacher():
@@ -283,7 +215,6 @@ def add_teacher():
         full_name  = request.form['full_name']
         username   = request.form['username']
         password   = request.form['password']
-        # getlist -> multiple values from checkboxes
         section_ids = request.form.getlist('section_ids')
         subject_names = request.form.getlist('subject_names')
 
@@ -296,13 +227,11 @@ def add_teacher():
             )
             new_teacher_id = cursor.lastrowid
 
-            # Insert each section assignment
             for sid in section_ids:
                 cursor.execute(
                     "INSERT IGNORE INTO teacher_sections (teacher_id, section_id) VALUES (%s, %s)",
                     (new_teacher_id, sid)
                 )
-            # Insert each subject assignment
             for sub in subject_names:
                 cursor.execute(
                     "INSERT IGNORE INTO teacher_subjects (teacher_id, subject_name) VALUES (%s, %s)",
@@ -333,7 +262,6 @@ def edit_teacher(tid):
     cursor.execute("SELECT * FROM subjects ORDER BY subject_name")
     subjects = cursor.fetchall()
 
-    # Currently assigned sections + subjects for pre-checking boxes in template
     cursor.execute("SELECT section_id FROM teacher_sections WHERE teacher_id = %s", (tid,))
     assigned_section_ids = [r['section_id'] for r in cursor.fetchall()]
     cursor.execute("SELECT subject_name FROM teacher_subjects WHERE teacher_id = %s", (tid,))
@@ -360,7 +288,6 @@ def edit_teacher(tid):
                 "UPDATE users SET full_name=%s, username=%s, password=%s WHERE id=%s",
                 (full_name, username, password, tid)
             )
-            # Replace all existing assignments with the new list
             cursor.execute("DELETE FROM teacher_sections WHERE teacher_id = %s", (tid,))
             cursor.execute("DELETE FROM teacher_subjects WHERE teacher_id = %s", (tid,))
 
@@ -379,7 +306,6 @@ def edit_teacher(tid):
             cursor.close()
             conn.close()
             msg = 'SUCCESS: Teacher updated!'
-            # Refresh values so checkboxes reflect latest save
             assigned_section_ids = [int(x) for x in section_ids]
             assigned_subjects    = list(subject_names)
         except Exception as e:
@@ -398,7 +324,6 @@ def delete_teacher(tid):
     try:
         conn = get_db()
         cursor = conn.cursor()
-        # Remove from assignments + join tables first (FK safety)
         cursor.execute("UPDATE assignments SET teacher_id = NULL WHERE teacher_id = %s", (tid,))
         cursor.execute("DELETE FROM teacher_sections WHERE teacher_id = %s", (tid,))
         cursor.execute("DELETE FROM teacher_subjects WHERE teacher_id = %s", (tid,))
@@ -407,13 +332,8 @@ def delete_teacher(tid):
         cursor.close()
         conn.close()
     except:
-        pass  # silently handle error
+        pass 
     return redirect(url_for('admin_teachers'))
-
-
-# ================================================
-# ADMIN - SECTION MANAGEMENT (CRUD)
-# ================================================
 
 @app.route('/admin/sections')
 def admin_sections():
@@ -431,7 +351,6 @@ def admin_sections():
     cursor.close()
     conn.close()
     return render_template('admin_sections.html', sections=sections)
-
 
 @app.route('/admin/add_section', methods=['GET', 'POST'])
 def add_section():
@@ -451,7 +370,6 @@ def add_section():
         except Exception as e:
             msg = 'Error: ' + str(e)
     return render_template('add_section.html', msg=msg)
-
 
 @app.route('/admin/edit_section/<int:sid>', methods=['GET', 'POST'])
 def edit_section(sid):
@@ -484,7 +402,6 @@ def edit_section(sid):
 
     return render_template('edit_section.html', section=section, msg=msg)
 
-
 @app.route('/admin/delete_section/<int:sid>')
 def delete_section(sid):
     if not is_full_access():
@@ -500,17 +417,11 @@ def delete_section(sid):
         pass
     return redirect(url_for('admin_sections'))
 
-
-# ================================================
-# ADMIN - STUDENT MANAGEMENT (View / Delete)
-# ================================================
-
 @app.route('/admin/students')
 def admin_all_students():
     if not is_full_access():
         return redirect(url_for('login'))
 
-    # Get optional search term from URL
     search = request.args.get('search', '')
 
     conn = get_db()
@@ -538,10 +449,8 @@ def admin_all_students():
     conn.close()
     return render_template('admin_all_students.html', students=students, search=search)
 
-
 @app.route('/admin/view_student/<int:sid>')
 def admin_view_student(sid):
-    # Admin can view full student profile (marks, attendance, assignments)
     if not is_full_access():
         return redirect(url_for('login'))
 
@@ -591,10 +500,8 @@ def admin_view_student(sid):
         from_admin=True
     )
 
-
 @app.route('/admin/edit_student/<int:sid>', methods=['GET', 'POST'])
 def admin_edit_student(sid):
-    # Admin can edit ALL student fields including metadata
     if not is_full_access():
         return redirect(url_for('login'))
 
@@ -633,7 +540,6 @@ def admin_edit_student(sid):
             conn = get_db()
             cursor = conn.cursor(dictionary=True)
 
-            # Check duplicate roll_no in the same section (but allow the current one)
             cursor.execute("""
                 SELECT id FROM students
                 WHERE roll_no = %s AND section_id = %s AND id != %s
@@ -657,8 +563,6 @@ def admin_edit_student(sid):
                 )
                 conn.commit()
                 msg = 'SUCCESS: Student profile updated!'
-
-                # Reload fresh data after update
                 cursor.execute("""
                     SELECT st.*, u.username, u.password as user_password
                     FROM students st JOIN users u ON st.user_id = u.id
@@ -678,8 +582,6 @@ def admin_edit_student(sid):
 
 @app.route('/admin/dedupe_students')
 def admin_dedupe_students():
-    # Finds rows that share roll_no + section_id, keeps the oldest (smallest id),
-    # moves that student's marks/attendance/assignments over, deletes the rest.
     if not is_full_access():
         return redirect(url_for('login'))
 
@@ -688,7 +590,6 @@ def admin_dedupe_students():
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
 
-        # Find groups with duplicates
         cursor.execute("""
             SELECT roll_no, section_id, MIN(id) AS keep_id, COUNT(*) AS total
             FROM students
@@ -699,7 +600,6 @@ def admin_dedupe_students():
 
         for grp in dup_groups:
             keep_id = grp['keep_id']
-            # Get all duplicate ids (the ones we want to delete)
             cursor.execute("""
                 SELECT id, user_id FROM students
                 WHERE roll_no = %s AND section_id = %s AND id != %s
@@ -710,18 +610,14 @@ def admin_dedupe_students():
                 bad_id      = d['id']
                 bad_user_id = d['user_id']
 
-                # Move the child records to the student we're keeping so nothing is lost
                 cursor.execute("UPDATE marks SET student_id=%s WHERE student_id=%s", (keep_id, bad_id))
                 cursor.execute("UPDATE attendance SET student_id=%s WHERE student_id=%s", (keep_id, bad_id))
-                # For student_assignments: only re-point rows that would not create a duplicate
                 cursor.execute("""
                     UPDATE IGNORE student_assignments
                     SET student_id=%s WHERE student_id=%s
                 """, (keep_id, bad_id))
-                # Clean out any rows that couldn't move (already existed on keep_id)
                 cursor.execute("DELETE FROM student_assignments WHERE student_id=%s", (bad_id,))
 
-                # Now safe to delete the duplicate student + its user account
                 cursor.execute("DELETE FROM students WHERE id=%s", (bad_id,))
                 if bad_user_id:
                     cursor.execute("DELETE FROM users WHERE id=%s", (bad_user_id,))
@@ -743,10 +639,8 @@ def admin_delete_student(sid):
     try:
         conn = get_db()
         cursor = conn.cursor()
-        # Get user_id first so we can delete user account too
         cursor.execute("SELECT user_id FROM students WHERE id = %s", (sid,))
         row = cursor.fetchone()
-        # Delete related records first (foreign key constraint)
         cursor.execute("DELETE FROM student_assignments WHERE student_id = %s", (sid,))
         cursor.execute("DELETE FROM marks WHERE student_id = %s", (sid,))
         cursor.execute("DELETE FROM attendance WHERE student_id = %s", (sid,))
@@ -760,17 +654,11 @@ def admin_delete_student(sid):
         pass
     return redirect(url_for('admin_all_students'))
 
-
-# ================================================
-# ADMIN - ALL MARKS VIEW
-# ================================================
-
 @app.route('/admin/marks')
 def admin_all_marks():
     if not is_full_access():
         return redirect(url_for('login'))
 
-    # Read all four filters from the URL (blank = "all")
     section_filter = request.args.get('section_id', '')
     subject_filter = request.args.get('subject', '')
     student_filter = request.args.get('student_id', '')
@@ -779,7 +667,6 @@ def admin_all_marks():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Build the query dynamically based on which filters are active
     query = """
         SELECT m.*, st.name as student_name, st.roll_no, sec.section_name
         FROM marks m
@@ -804,8 +691,6 @@ def admin_all_marks():
 
     cursor.execute(query, params)
     marks = cursor.fetchall()
-
-    # Dropdown data for filters
     cursor.execute("SELECT * FROM sections")
     sections = cursor.fetchall()
     cursor.execute("SELECT * FROM subjects ORDER BY subject_name")
@@ -816,7 +701,6 @@ def admin_all_marks():
         ORDER BY sec.section_name, st.roll_no
     """)
     students = cursor.fetchall()
-    # Distinct exam names that actually exist in the marks table (UT-1, Half Yearly, etc.)
     cursor.execute("SELECT DISTINCT exam_name FROM marks WHERE exam_name IS NOT NULL ORDER BY exam_name")
     exams = cursor.fetchall()
 
@@ -828,11 +712,6 @@ def admin_all_marks():
         section_filter=section_filter, subject_filter=subject_filter,
         student_filter=student_filter, exam_filter=exam_filter
     )
-
-
-# ================================================
-# ADMIN - ANNOUNCEMENTS / NOTICES
-# ================================================
 
 @app.route('/admin/notices', methods=['GET', 'POST'])
 def admin_notices():
@@ -884,11 +763,6 @@ def delete_notice(nid):
     conn.close()
     return redirect(url_for('admin_notices'))
 
-
-# ================================================
-# ADMIN - SYSTEM CHART DATA (JSON)
-# ================================================
-
 @app.route('/admin/chart_data')
 def admin_chart_data():
     if not is_full_access():
@@ -897,7 +771,6 @@ def admin_chart_data():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Section-wise student count for bar chart
     cursor.execute("""
         SELECT sec.section_name, COUNT(st.id) as count
         FROM sections sec
@@ -906,7 +779,6 @@ def admin_chart_data():
     """)
     sec_rows = cursor.fetchall()
 
-    # Subject-wise average marks for all students
     cursor.execute("""
         SELECT subject, ROUND(AVG(marks_obtained/total_marks*100), 1) as avg_pct
         FROM marks
@@ -915,20 +787,31 @@ def admin_chart_data():
     """)
     sub_rows = cursor.fetchall()
 
+    cursor.execute("""
+        SELECT
+            CASE
+                WHEN gender = 'Male' THEN 'Boys'
+                WHEN gender = 'Female' THEN 'Girls'
+                ELSE 'Not specified'
+            END as gender_label,
+            COUNT(*) as count
+        FROM students
+        GROUP BY gender_label
+        ORDER BY FIELD(gender_label, 'Boys', 'Girls', 'Not specified')
+    """)
+    gender_rows = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
     return jsonify({
         'sec_labels': [r['section_name'] for r in sec_rows],
         'sec_data':   [r['count'] for r in sec_rows],
+        'gender_labels': [r['gender_label'] for r in gender_rows],
+        'gender_data':   [r['count'] for r in gender_rows],
         'sub_labels': [r['subject'] for r in sub_rows],
         'sub_data':   [float(r['avg_pct']) for r in sub_rows]
     })
-
-
-# ================================================
-# TEACHER - DASHBOARD
-# ================================================
 
 @app.route('/teacher')
 def teacher_dashboard():
@@ -936,26 +819,22 @@ def teacher_dashboard():
         return redirect(url_for('login'))
 
     teacher_id = session['user_id']
-    # Figure out what this teacher is allowed to see
     my_sections = get_teacher_sections(teacher_id)
     my_subjects = get_teacher_subjects(teacher_id)
 
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Teacher basic info
     cursor.execute("SELECT * FROM users WHERE id = %s", (teacher_id,))
     teacher_info = cursor.fetchone()
 
-    # Get the list of section names this teacher is assigned to (for display)
     section_names = []
     if my_sections:
-        # IN clause needs same number of placeholders as items
+                                                              
         placeholders = ','.join(['%s'] * len(my_sections))
         cursor.execute("SELECT section_name FROM sections WHERE id IN (" + placeholders + ")", my_sections)
         section_names = [r['section_name'] for r in cursor.fetchall()]
 
-    # Count ONLY students in this teacher's sections
     student_count = 0
     if my_sections:
         placeholders = ','.join(['%s'] * len(my_sections))
@@ -965,7 +844,6 @@ def teacher_dashboard():
     cursor.execute("SELECT COUNT(*) as cnt FROM assignments WHERE teacher_id = %s", (teacher_id,))
     assignment_count = cursor.fetchone()['cnt']
 
-    # Recent 5 marks entries for THIS teacher's sections + subjects only
     recent_marks = []
     if my_sections and my_subjects:
         sec_ph = ','.join(['%s'] * len(my_sections))
@@ -992,17 +870,11 @@ def teacher_dashboard():
         my_subjects=my_subjects
     )
 
-
-# ================================================
-# TEACHER - STUDENT MANAGEMENT (CRUD)
-# ================================================
-
 @app.route('/teacher/students')
 def teacher_students():
     if not check_role('teacher'):
         return redirect(url_for('login'))
 
-    # A teacher can only see students in their assigned sections
     my_sections = get_teacher_sections(session['user_id'])
 
     search = request.args.get('search', '')
@@ -1011,7 +883,6 @@ def teacher_students():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Only show THIS teacher's sections in the filter dropdown
     sections = []
     if my_sections:
         placeholders = ','.join(['%s'] * len(my_sections))
@@ -1054,7 +925,6 @@ def add_student():
     if not check_role('teacher'):
         return redirect(url_for('login'))
 
-    # Only show sections assigned to this teacher
     my_sections = get_teacher_sections(session['user_id'])
 
     conn = get_db()
@@ -1073,7 +943,6 @@ def add_student():
         roll_no      = request.form['roll_no']
         section_id   = request.form['section_id']
 
-        # Safety: make sure the posted section is actually assigned to this teacher
         if int(section_id) not in my_sections:
             return render_template('add_student.html',
                 sections=sections,
@@ -1093,14 +962,12 @@ def add_student():
         try:
             conn = get_db()
             cursor = conn.cursor(dictionary=True)
-
-            # Stop duplicate student entries BEFORE inserting anything
+            
             cursor.execute(
                 "SELECT id FROM students WHERE roll_no = %s AND section_id = %s",
                 (roll_no, section_id)
             )
             dup = cursor.fetchone()
-            # Also make sure the username is not already taken
             cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
             dup_user = cursor.fetchone()
 
@@ -1118,15 +985,13 @@ def add_student():
                     sections=sections,
                     msg='Error: Username "' + username + '" is already taken. Please choose another.'
                 )
-
-            # Create user account for student
+                
             cursor.execute(
                 "INSERT INTO users (username, password, role, full_name) VALUES (%s, %s, 'student', %s)",
                 (username, password, name)
             )
             new_user_id = cursor.lastrowid
 
-            # Create student record with metadata
             cursor.execute("""
                 INSERT INTO students
                 (name, roll_no, section_id, user_id, email, phone, dob, gender,
@@ -1137,7 +1002,6 @@ def add_student():
             new_student_id = cursor.lastrowid
             conn.commit()
 
-            # Auto-assign existing assignments of that section
             cursor.execute("SELECT id FROM assignments WHERE section_id = %s", (section_id,))
             for a in cursor.fetchall():
                 cursor.execute(
@@ -1158,8 +1022,6 @@ def add_student():
 def edit_student(sid):
     if not check_role('teacher'):
         return redirect(url_for('login'))
-
-    # Teacher can only edit students in their own sections
     my_sections = get_teacher_sections(session['user_id'])
 
     conn = get_db()
@@ -1171,7 +1033,7 @@ def edit_student(sid):
     """, (sid,))
     student = cursor.fetchone()
 
-    # Only list teacher's sections in the dropdown
+                                                  
     sections = []
     if my_sections:
         placeholders = ','.join(['%s'] * len(my_sections))
@@ -1183,7 +1045,7 @@ def edit_student(sid):
     if not student:
         return "Student not found!"
 
-    # Block access if this student is not in one of the teacher's sections
+                                                                          
     if student['section_id'] not in my_sections:
         return "Access denied: this student is not in one of your assigned sections."
 
@@ -1202,7 +1064,7 @@ def edit_student(sid):
         parent_phone = request.form.get('parent_phone', '')
         address      = request.form.get('address', '')
 
-        # Teacher may NOT move a student to a section they are not assigned to
+                                                                              
         if int(section_id) not in my_sections:
             return render_template('edit_student.html',
                 student=student, sections=sections,
@@ -1213,7 +1075,7 @@ def edit_student(sid):
             conn = get_db()
             cursor = conn.cursor(dictionary=True)
 
-            # Check duplicate roll_no in the same section (but allow the current student)
+                                                                                         
             cursor.execute("""
                 SELECT id FROM students
                 WHERE roll_no = %s AND section_id = %s AND id != %s
@@ -1238,7 +1100,7 @@ def edit_student(sid):
                 conn.commit()
                 msg = 'SUCCESS: Student updated!'
 
-                # Re-fetch the student so the form shows the updated values
+                                                                           
                 cursor.execute("""
                     SELECT st.*, u.username, u.password as user_password
                     FROM students st JOIN users u ON st.user_id = u.id
@@ -1259,7 +1121,7 @@ def delete_student(sid):
     if not check_role('teacher'):
         return redirect(url_for('login'))
 
-    # A teacher may only delete students from their own sections
+                                                                
     my_sections = get_teacher_sections(session['user_id'])
 
     try:
@@ -1291,7 +1153,7 @@ def student_profile(sid):
     if not check_role('teacher'):
         return redirect(url_for('login'))
 
-    # Teacher can only see profiles of students in their sections
+                                                                 
     my_sections = get_teacher_sections(session['user_id'])
 
     conn = get_db()
@@ -1309,7 +1171,7 @@ def student_profile(sid):
         conn.close()
         return "Access denied: this student is not in one of your sections."
 
-    # Only show marks for subjects THIS teacher teaches (privacy)
+                                                                 
     my_subjects = get_teacher_subjects(session['user_id'])
     marks = []
     if my_subjects:
@@ -1326,7 +1188,7 @@ def student_profile(sid):
     """, (sid,))
     attendance_records = cursor.fetchall()
 
-    # Calculate attendance percentage
+                                     
     total_days = len(attendance_records)
     present_days = sum(1 for a in attendance_records if a['status'] == 'Present')
     att_pct = round((present_days / total_days * 100), 1) if total_days > 0 else 0
@@ -1353,9 +1215,9 @@ def student_profile(sid):
     )
 
 
-# ================================================
-# TEACHER - ASSIGNMENT MANAGEMENT (CRUD)
-# ================================================
+                                                  
+                                        
+                                                  
 
 @app.route('/teacher/assignments')
 def teacher_assignments():
@@ -1391,7 +1253,7 @@ def add_assignment():
     my_sections = get_teacher_sections(teacher_id)
     my_subjects = get_teacher_subjects(teacher_id)
 
-    # Dropdowns limited to teacher's assignments
+                                                
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     sections = []
@@ -1415,7 +1277,7 @@ def add_assignment():
         due_date    = request.form['due_date']
         section_id  = request.form['section_id']
 
-        # Block out-of-scope submissions
+                                        
         if int(section_id) not in my_sections or subject not in my_subjects:
             return render_template('add_assignment.html',
                 sections=sections, subjects=subjects,
@@ -1432,7 +1294,7 @@ def add_assignment():
             new_id = cursor.lastrowid
             conn.commit()
 
-            # Assign to all students in that section
+                                                    
             cursor.execute("SELECT id FROM students WHERE section_id = %s", (section_id,))
             for s in cursor.fetchall():
                 cursor.execute(
@@ -1463,7 +1325,7 @@ def edit_assignment(aid):
     assignment = cursor.fetchone()
     cursor.execute("SELECT * FROM sections")
     sections = cursor.fetchall()
-    # Only show subjects the teacher actually teaches
+                                                     
     subjects = [{'subject_name': s} for s in my_subjects]
     cursor.close()
     conn.close()
@@ -1517,20 +1379,20 @@ def delete_assignment(aid):
     return redirect(url_for('teacher_assignments'))
 
 
-# ================================================
-# TEACHER - MARKS MANAGEMENT (CRUD)
-# ================================================
+                                                  
+                                   
+                                                  
 
 @app.route('/teacher/marks')
 def teacher_marks():
     if not check_role('teacher'):
         return redirect(url_for('login'))
 
-    # Teacher can only see marks for their sections AND their subjects
+                                                                      
     my_sections = get_teacher_sections(session['user_id'])
     my_subjects = get_teacher_subjects(session['user_id'])
 
-    # If teacher is unassigned, show nothing
+                                            
     if not my_sections or not my_subjects:
         return render_template('teacher_marks.html',
             marks=[], sections=[], subjects=[], students=[], exams=[],
@@ -1538,7 +1400,7 @@ def teacher_marks():
             unassigned=True
         )
 
-    # Read all four filters (blank = show everything within teacher's scope)
+                                                                            
     section_filter = request.args.get('section_id', '')
     subject_filter = request.args.get('subject', '')
     student_filter = request.args.get('student_id', '')
@@ -1547,7 +1409,7 @@ def teacher_marks():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Dropdowns (sections + subjects) are limited to teacher's assigned ones
+                                                                            
     sec_ph = ','.join(['%s'] * len(my_sections))
     sub_ph = ','.join(['%s'] * len(my_subjects))
     cursor.execute("SELECT * FROM sections WHERE id IN (" + sec_ph + ") ORDER BY section_name", my_sections)
@@ -1564,7 +1426,7 @@ def teacher_marks():
     cursor.execute("SELECT DISTINCT exam_name FROM marks WHERE exam_name IS NOT NULL ORDER BY exam_name")
     exams = cursor.fetchall()
 
-    # Main query: hard-scoped to teacher's sections + subjects
+                                                              
     query = """
         SELECT m.*, st.name as student_name, st.roll_no, sec.section_name
         FROM marks m
@@ -1610,7 +1472,7 @@ def enter_marks():
     my_sections = get_teacher_sections(session['user_id'])
     my_subjects = get_teacher_subjects(session['user_id'])
 
-    # Build student + subject dropdowns limited to teacher's scope
+                                                                  
     students = []
     subjects = []
     conn = get_db()
@@ -1640,7 +1502,7 @@ def enter_marks():
         total_marks    = request.form['total_marks']
         exam_date      = request.form['exam_date']
 
-        # Safety check: student must be in teacher's sections AND subject must be one teacher teaches
+                                                                                                     
         try:
             conn = get_db()
             cursor = conn.cursor(dictionary=True)
@@ -1685,7 +1547,7 @@ def edit_marks(mid):
 
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    # Load the mark record along with the student's section so we can verify access
+                                                                                   
     cursor.execute("""
         SELECT m.*, st.section_id AS stu_section
         FROM marks m JOIN students st ON m.student_id = st.id
@@ -1698,13 +1560,13 @@ def edit_marks(mid):
         conn.close()
         return "Marks record not found!"
 
-    # Access check: must be teacher's section AND subject they teach
+                                                                    
     if mark['stu_section'] not in my_sections or mark['subject'] not in my_subjects:
         cursor.close()
         conn.close()
         return "Access denied: this marks record is outside your assigned scope."
 
-    # Dropdowns scoped to teacher
+                                 
     students = []
     subjects = []
     if my_sections:
@@ -1731,7 +1593,7 @@ def edit_marks(mid):
         total_marks    = request.form['total_marks']
         exam_date      = request.form['exam_date']
 
-        # Cannot switch the record to a subject the teacher doesn't teach
+                                                                         
         if subject not in my_subjects:
             msg = 'Error: You cannot change the subject to one you are not assigned to teach.'
         else:
@@ -1763,7 +1625,7 @@ def delete_marks(mid):
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
-        # Verify the mark belongs to teacher's scope before deleting
+                                                                    
         cursor.execute("""
             SELECT m.subject, st.section_id
             FROM marks m JOIN students st ON m.student_id = st.id
@@ -1780,9 +1642,9 @@ def delete_marks(mid):
     return redirect(url_for('teacher_marks'))
 
 
-# ================================================
-# TEACHER - ATTENDANCE
-# ================================================
+                                                  
+                      
+                                                  
 
 @app.route('/teacher/attendance', methods=['GET', 'POST'])
 def teacher_attendance():
@@ -1794,7 +1656,7 @@ def teacher_attendance():
     msg = ''
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    # Only teacher's sections appear in the picker
+                                                  
     sections = []
     if my_sections:
         placeholders = ','.join(['%s'] * len(my_sections))
@@ -1803,12 +1665,12 @@ def teacher_attendance():
     cursor.close()
     conn.close()
 
-    # Get selected section and date
+                                   
     selected_section = request.args.get('section_id', '')
     selected_date    = request.args.get('date', '')
     students = []
 
-    # Block students from loading if the picked section isn't the teacher's
+                                                                           
     if selected_section and selected_date and int(selected_section) in my_sections:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -1829,14 +1691,14 @@ def teacher_attendance():
         att_date   = request.form['att_date']
         sec_id     = request.form['section_id']
 
-        # Refuse attendance save if section is not in teacher's scope
+                                                                     
         if int(sec_id) not in my_sections:
             return render_template('teacher_attendance.html',
                 sections=sections, students=[],
                 selected_section=selected_section, selected_date=selected_date,
                 msg='Error: You cannot mark attendance for a section that is not assigned to you.'
             )
-        # Student IDs are passed as form fields like "status_<id>"
+                                                                  
 
         try:
             conn = get_db()
@@ -1849,7 +1711,7 @@ def teacher_attendance():
                 status_key = 'status_' + str(stud_id)
                 status    = request.form.get(status_key, 'Present')
 
-                # Check if attendance already exists for this date
+                                                                  
                 cursor.execute(
                     "SELECT id FROM attendance WHERE student_id=%s AND date=%s",
                     (stud_id, att_date)
@@ -1914,9 +1776,9 @@ def view_attendance():
     return render_template('view_attendance.html', sections=sections, records=records, section_filter=section_filter)
 
 
-# ================================================
-# TEACHER - SECTION PERFORMANCE CHARTS (JSON)
-# ================================================
+                                                  
+                                             
+                                                  
 
 @app.route('/teacher/section_charts')
 def section_charts():
@@ -1947,14 +1809,14 @@ def section_chart_data():
     if not section_id:
         return jsonify({'error': 'no section selected'})
 
-    # Cannot pull chart data for a section the teacher is not assigned to
+                                                                         
     if int(section_id) not in my_sections:
         return jsonify({'error': 'access denied'})
 
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Subject-wise average for this section
+                                           
     cursor.execute("""
         SELECT m.subject,
                ROUND(AVG(m.marks_obtained / m.total_marks * 100), 1) as avg_pct
@@ -1965,7 +1827,7 @@ def section_chart_data():
     """, (section_id,))
     sub_rows = cursor.fetchall()
 
-    # Student-wise average for this section (bar chart)
+                                                       
     cursor.execute("""
         SELECT st.name,
                ROUND(AVG(m.marks_obtained / m.total_marks * 100), 1) as avg_pct
@@ -1988,9 +1850,9 @@ def section_chart_data():
     })
 
 
-# ================================================
-# STUDENT - DASHBOARD
-# ================================================
+                                                  
+                     
+                                                  
 
 @app.route('/student')
 def student_dashboard():
@@ -2015,7 +1877,7 @@ def student_dashboard():
 
     student_id = student['id']
 
-    # Get assignments with status
+                                 
     cursor.execute("""
         SELECT a.id as assignment_id, a.title, a.subject, a.due_date, a.description, sa.status
         FROM student_assignments sa
@@ -2025,7 +1887,7 @@ def student_dashboard():
     """, (student_id,))
     assignments = cursor.fetchall()
 
-    # Get marks with percentage calculation
+                                           
     cursor.execute("""
         SELECT * FROM marks WHERE student_id = %s ORDER BY exam_date DESC
     """, (student_id,))
@@ -2035,7 +1897,7 @@ def student_dashboard():
         pct = round((m['marks_obtained'] / m['total_marks']) * 100, 1) if m['total_marks'] > 0 else 0
         marks.append({**m, 'percent': pct})
 
-    # Get attendance summary
+                            
     cursor.execute("SELECT status, COUNT(*) as cnt FROM attendance WHERE student_id=%s GROUP BY status", (student_id,))
     att_rows = cursor.fetchall()
     att_summary = {r['status']: r['cnt'] for r in att_rows}
@@ -2043,7 +1905,7 @@ def student_dashboard():
     present_days = att_summary.get('Present', 0)
     att_pct = round((present_days / total_days * 100), 1) if total_days > 0 else 0
 
-    # Get latest 5 announcements for students
+                                             
     cursor.execute("""
         SELECT a.*, u.full_name as posted_by_name
         FROM announcements a
@@ -2067,9 +1929,9 @@ def student_dashboard():
     )
 
 
-# ================================================
-# STUDENT - CHART DATA (JSON)
-# ================================================
+                                                  
+                             
+                                                  
 
 @app.route('/student/chart_data')
 def student_chart_data():
@@ -2097,11 +1959,11 @@ def student_chart_data():
     if filter_type == 'last5':
         all_marks = all_marks[-10:]
 
-    # Line chart: marks % trend over time
+                                         
     line_labels = [m['exam_name'] + ' (' + m['subject'][:3] + ')' for m in all_marks]
     line_data   = [round(m['marks_obtained'] / m['total_marks'] * 100, 1) if m['total_marks'] > 0 else 0 for m in all_marks]
 
-    # Bar chart: subject-wise average
+                                     
     subj_map = {}
     for m in all_marks:
         s = m['subject']
@@ -2116,9 +1978,9 @@ def student_chart_data():
     return jsonify({'line_labels': line_labels, 'line_data': line_data, 'bar_labels': bar_labels, 'bar_data': bar_data})
 
 
-# ================================================
-# STUDENT - SUBMIT ASSIGNMENT
-# ================================================
+                                                  
+                             
+                                                  
 
 @app.route('/student/submit/<int:assignment_id>')
 def submit_assignment(assignment_id):
@@ -2140,9 +2002,9 @@ def submit_assignment(assignment_id):
     return redirect(url_for('student_dashboard'))
 
 
-# ================================================
-# STUDENT - FULL ATTENDANCE VIEW
-# ================================================
+                                                  
+                                
+                                                  
 
 @app.route('/student/attendance')
 def student_attendance():
@@ -2159,7 +2021,7 @@ def student_attendance():
         cursor.execute("SELECT * FROM attendance WHERE student_id=%s ORDER BY date DESC", (student['id'],))
         records = cursor.fetchall()
 
-    # Calculate stats
+                     
     total = len(records)
     present = sum(1 for r in records if r['status'] == 'Present')
     absent  = sum(1 for r in records if r['status'] == 'Absent')
@@ -2174,9 +2036,9 @@ def student_attendance():
     )
 
 
-# ================================================
-# STUDENT - VIEW ALL NOTICES
-# ================================================
+                                                  
+                            
+                                                  
 
 @app.route('/student/notices')
 def student_notices():
@@ -2198,9 +2060,9 @@ def student_notices():
     return render_template('student_notices.html', notices=notices)
 
 
-# ================================================
-# STUDENT - CHANGE PASSWORD
-# ================================================
+                                                  
+                           
+                                                  
 
 @app.route('/student/change_password', methods=['GET', 'POST'])
 def change_password():
@@ -2219,7 +2081,7 @@ def change_password():
             try:
                 conn = get_db()
                 cursor = conn.cursor(dictionary=True)
-                # Check if old password is correct
+                                                  
                 cursor.execute("SELECT * FROM users WHERE id=%s AND password=%s", (session['user_id'], old_password))
                 user = cursor.fetchone()
                 if not user:
@@ -2236,7 +2098,7 @@ def change_password():
     return render_template('change_password.html', msg=msg)
 
 
-# -----------------------------------------------
+                                                 
 import os
 
 if __name__ == '__main__':
