@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}View Attendance Records{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-calendar3 text-primary"></i> Attendance Records</h3>
+    <a href="{{ url_for('teacher_attendance') }}" class="btn btn-primary">
+        <i class="bi bi-check2-square"></i> Take Attendance
+    </a>
+</div>
+
+<form method="GET" class="ow g-2 mb-2">
+    <div class="col-md-4">
+        <select class="form-select" name="section_id" title="Filter by section" onchange="this.form.submit()">
+            <option value="">-- Select Section to View --</option>
+            {% for sec in sections %}
+            <option value="{{ sec.id }}" {% if section_filter == sec.id|string %}selected{% endif %}>
+                {{ sec.section_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+{% if records %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Roll No</th>
+                        <th>Section</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ r.student_name }}</td>
+                        <td><code>{{ r.roll_no }}</code></td>
+                        <td><span class="badge bg-primary">{{ r.section_name }}</span></td>
+                        <td>{{ r.date }}</td>
+                        <td>
+                            {% if r.status == 'Present' %}
+                            <span class="badge bg-success">Present</span>
+                            {% elif r.status == 'Absent' %}
+                            <span class="badge bg-danger">Absent</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Late</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-2 text-muted small border-top">{{ records|length }} records</div>
+    </div>
+</div>
+{% elif section_filter %}
+<div class="alert alert-info">No attendance records found for this section yet.</div>
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-calendar-x fs-1"></i>
+    <p class="mt-2">Select a section above to view attendance records.</p>
+</div>
+{% endif %}
+
+{% endblock %}
