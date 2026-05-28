@@ -43,7 +43,7 @@
   <p align="center">
     A Flask and MySQL based school management system for managing students, teachers, sections, assignments, marks, attendance, announcements, and performance charts.
     <br />
-    <a href="http://hackclub.com">View Demo</a>
+    <a href="http://shlokvaidya.hackclub.app">View Demo</a>
     &middot;
     <a href="https://github.com/ShlokVaidya/school-management-system/issues/new?labels=bug">Report Bug</a>
     &middot;
