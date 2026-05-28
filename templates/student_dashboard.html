@@ -93,7 +93,7 @@
                                 </td>
                                 <td>
                                     {% if a.status == 'Pending' %}
-                                    <a href="{{ url_for('submit_ssignment', assignment_id=a.assignment_id) }}"
+                                    <a href="{{ url_for('submit_assignment', assignment_id=a.assignment_id) }}"
                                         class="btn btn-sm btn-success" onclick="return confirm('Mark this assignment as submitted?')">
                                         <i class="bi bi-check2"></i> Submit
                                     </a>
