@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Notices{% endblock %}
+
+{% block content %}
+
+<h3 class="mb-4"><i class="bi bi-bell-fill text-warning"></i> Notice Board</h3>
+
+{% if notices %}
+    {% for n in notices %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1"><i class="bi bi-megaphone text-warning me-2"></i>{{ n.title }}</h5>
+                <span class="badge bg-secondary">{{ n.target_role }}</span>
+            </div>
+            <p class="mb-2" text-dark>{{ n.content }}</p>
+            <small class="text-muted">
+                <i class="bi bi-person"></i> Posted by {{ n.posted_by_name }} 
+                    &nbsp;&mdash;&nbsp;
+                    <i class="bi bi-clock"></i> {{ n.created_at.strftime('%d %B %Y, %I:%M %p') }}
+            </small>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-bell-slash fs-1"></i>
+    <p class="mt-2">No announcements have been posted yet.</p>
+</div>
+{% endif %}
+
+{% endblock %}

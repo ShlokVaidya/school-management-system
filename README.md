@@ -175,7 +175,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/ShlokVaidya/school-management-system.svg?style=for-the-badge
 [contributors-url]: https://github.com/ShlokVaidya/school-management-system/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/ShlokVaidya/school-management-system.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/ShlokVaidya/school-management-system.svg?style
 [forks-url]: https://github.com/ShlokVaidya/school-management-system/network/members
 [stars-shield]: https://img.shields.io/github/stars/ShlokVaidya/school-management-system.svg?style=for-the-badge
 [stars-url]: https://github.com/ShlokVaidya/school-management-system/stargazers

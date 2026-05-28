@@ -6,7 +6,6 @@ import os
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(
@@ -14,7 +13,6 @@ def favicon():
         'favicon.ico',
         mimetype='image/vnd.microsoft.icon'
     )
-
 
 @app.route('/public/<path:filename>')
 def public_file(filename):
@@ -105,7 +103,6 @@ def login():
             error = 'Database error: ' + str(e)
     return render_template('login.html', error=error)
 
-
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -118,7 +115,6 @@ def dashboard():
     elif role == 'student':
         return redirect(url_for('student_dashboard'))
     return redirect(url_for('login'))
-
 
 @app.route('/logout')
 def logout():

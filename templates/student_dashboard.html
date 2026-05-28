@@ -2,8 +2,262 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h3 class="mb-3"><i class="bi bi-mortarboard"></i> Student Dashboard</h3>
-    <div class="alert alert-info mb-0">This page is under construction.</div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-person-circle text-primary"></i> My Dashboard</h3>
+        <p class="text-muted small mb-0">
+            {{ session.full_name }} &nbsp;|&nbsp;
+            Roll No: <strong>{{ student.roll_no }}</strong> &nbsp;|&nbsp;
+            Section: <span class="badge bg-primary">{{ student.section_name }}</span>
+        </p>
+    </div>
 </div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm card-border-primary">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-primary">{{ assignments | length }}</div>
+                <div class="small text-muted"><i class="bi bi-journal-text"></i> Assignments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm card-border-success">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-success">
+                    {{ assignments | selectattr('status', 'equalto', 'Submitted') | list | length }}
+                </div>
+                <div class="small text-muted"><i class="bi bi-check-circle"></i> Submitted</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm card-border-warning">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold
+                    {% if att_pct >= 75 %}text-success{% else %}text-danger{% endif %}">
+                    {{ att_pct }}%
+                </div>
+                <div class="small text-muted"><i class="bi bi-calendar-check"></i> Attendance</div>
+                <a href="{{ url_for('student_attendance') }}" class="btn btn-outline-secondary btn-sm mt-1">Details</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm card-border-danger">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-danger">{{ marks | length }}</div>
+                <div class="small text-muted"><i class="bi bi-bar-chart"></i> Marks Entries</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <Div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold">
+                <i class="bi bi-journal-text"></i> My Assignments
+            </div>
+            <div class="card-body p-0">
+                {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Due</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr>
+                                <td>
+                                    <strong>{{ a.title }}</strong>
+                                    {% if a.description %}
+                                    <br><small class="text-muted">{{ a.description[:50] }}...</small>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ a.subject }}</span></td>
+                                <td class="small">{{ a.due_date }}</td>
+                                <td>
+                                    {% if a.status == 'Submitted' %}
+                                    <span class="badge bg-success">Submitted</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if a.status == 'Pending' %}
+                                    <a href="{{ url_for('submit_ssignment', assignment_id=a.assignment_id) }}"
+                                        class="btn btn-sm btn-success" onclick="return confirm('Mark this assignment as submitted?')">
+                                        <i class="bi bi-check2"></i> Submit
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="p-3 text-muted mb-0">No assignments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </Div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between">
+                <span><i class="bi bi-bell-fill"></i> Notices</span>
+                <a href="{{ url_for('student_notices') }}" class="btn btn-sm btn-dark">All</a>
+            </div>
+            <div class="card-body p-2">
+                {% if notices %}
+                    {% for n in notices %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong class="small">{{ n.title }}</strong>
+                        <p class="mb-0 small text-muted">{{ n.content[:80] }}...</p>
+                        <span class="text-muted notice-date">
+                            {{ n.created_at.strftime('%d %b') }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p class="text-muted small p-2 mb-0">No notices yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white fw-bold">
+        <i class="bi bi-trophy"></i> My Marks
+    </div>
+    <div class="card-body p-0">
+        {% if marks %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Subject</th><th>Exam</th><th>Mark</th><th>Out of</th><th>%</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in marks %}
+                    <tr>
+                        <td>{{ m.subject }}</td>
+                        <td><span class="badge bg-secondary">{{ m.exam_name }}</span></td>
+                        <td><strong>{{ m.marks_obtained }}</strong></td>
+                        <td>{{ m.total_marks }}</td>
+                        <td>
+                            {% if m.percent >= 75 %}<span class="text-success fw-bold">{{ m.percent }}%</span>
+                            {% elif m.percent >= 50 %}<span class="text-warning fw-bold">{{ m.percent }}%</span>
+                            {% else %}<span class="text-danger fw-bold">{{ m.percent }}%</span>{% endif %}
+                        </td>
+                        <td class="small text-muted">{{ m.exam_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="p-3 text-muted mb-0">No marks entered yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-graph-up-arrow"></i> Performance Charts</span>
+        <div>
+            <button type="button" class="btn btn-sm btn-light me-1" onclick="loadCharts('last5')">Last 5 Tests</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="text-center text-muted small">Marks Trend Over Exams</h6>
+                <canvas id="lineChart" height="220"></canvas>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-center text-muted small">Subject-wise Average %</h6>
+                <canvas id="barChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var lineChartObj = null;
+    var barChartObj = null;
+
+    function loadCharts(filterType) {
+        fetch('/student/chart_data?filter=' + filterType)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) { return; }
+
+            if (lineChartObj) lineChartObj.destroy();
+            if (barChartObj) barChartObj.destroy();
+
+            var ctx1=document.getElementById('lineChart').getContext('2d');
+            lineChartObj = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: data.line_labels,
+                    datasets: [{
+                        label: 'Marks %',
+                        data: data.line_data,
+                        borderColor: 'rgb(54,162,235)',
+                        backgroundColor: 'rgba(54,162,235,0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, max: 100,
+                            title: { display: true, text: 'Percentage %' } }
+                    }
+                }
+            });
+
+            var ctx2 = document.getElementById('barChart').getContext('2d');
+            barChartObj = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: data.bar_labels,
+                    datasets: [{
+                        labels: 'Average %',
+                        data: data.bar_data,
+                        backgroundColor: [
+                            'rgba(255,99,132,0.7)', 'rgba(54,162,235,0.7)',
+                            'rgba(255,206,86,0.7)', 'rgba(75,192,192,0.7)',
+                            'rgba(153,102,255,0.7)', 'rgba(255,159,64,0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100,
+                            title: { display: true, text: 'Average %' } }
+                    }
+                }
+            });
+        });
+    }
+
+    window.onload = function() { loadCharts('all'); };   
+</script>
 {% endblock %}
