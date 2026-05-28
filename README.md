@@ -143,6 +143,8 @@ Make sure Python and MySQL are installed on your system.
 - [x] Assignment, marks, and attendance tracking
 - [x] Role-based dashboards
     - [ ] More reporting and export options
+- [ ] Adding Finance
+- [ ] Chats Room
 
 See the [open issues](https://github.com/ShlokVaidya/school-management-system/issues) for a full list of proposed features (and known issues).
 
@@ -173,7 +175,7 @@ Don't forget to give the project a star! Thanks again!
 ---
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/ShlokVaidya/school-management-system.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/ShlokVaidya/school-management-system.svg?style
 [contributors-url]: https://github.com/ShlokVaidya/school-management-system/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/ShlokVaidya/school-management-system.svg?style
 [forks-url]: https://github.com/ShlokVaidya/school-management-system/network/members
@@ -186,7 +188,6 @@ Don't forget to give the project a star! Thanks again!
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://github.com/ShlokVaidya
 [product-screenshot]: public/school-bag.png
-<!-- Shields.io badges. You can a comprehensive list with many more badges at: https://github.com/inttter/md-badges -->
 [Python]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
 [Python-url]: https://www.python.org/
 [Flask]: https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white
